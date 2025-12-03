@@ -1,0 +1,162 @@
+"use client"
+
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { ScalesIcon, ShieldCheckIcon, CourtBuildingIcon } from "@/components/icons/legal-icons"
+import { BookOpen, ArrowRight, Play } from "lucide-react"
+
+export function HeroSection() {
+  return (
+    <section className="relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 seal-pattern opacity-30" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-muted/30" />
+
+      <div className="container relative mx-auto px-4 py-16 lg:px-8 lg:py-24">
+        <div className="grid items-center gap-12 lg:grid-cols-2">
+          {/* Content */}
+          <div className="max-w-2xl">
+            <Badge variant="secondary" className="mb-6 gap-2 px-4 py-2">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+              </span>
+              Trusted by 50,000+ Law Students
+            </Badge>
+
+            <h1 className="font-serif text-4xl font-bold leading-tight tracking-tight text-foreground md:text-5xl lg:text-6xl">
+              <span className="text-balance">India&apos;s Most Reliable</span>{" "}
+              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Legal Learning
+              </span>{" "}
+              <span className="text-balance">&amp; Court Tracking Platform</span>
+            </h1>
+
+            <p className="mt-6 text-lg text-muted-foreground text-pretty">
+              Access secure DRM-protected study materials, track court cases in real-time, and prepare for legal exams
+              with expert resources. Your complete companion for judiciary preparation.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              <Button size="lg" className="gap-2 px-8" asChild>
+                <Link href="/study-materials">
+                  <BookOpen className="h-5 w-5" />
+                  Explore Study Material
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" className="gap-2 px-8 bg-transparent" asChild>
+                <Link href="/court-tracker">
+                  <CourtBuildingIcon className="h-5 w-5" />
+                  Track Court Cases
+                </Link>
+              </Button>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="mt-12 flex flex-wrap items-center gap-8">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <ShieldCheckIcon className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">DRM Secure</p>
+                  <p className="text-sm text-muted-foreground">Protected Content</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
+                  <ScalesIcon className="h-6 w-6 text-accent" />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">Real-Time</p>
+                  <p className="text-sm text-muted-foreground">Court Updates</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <BookOpen className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">Exam Focused</p>
+                  <p className="text-sm text-muted-foreground">Study Resources</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Visual */}
+          <div className="relative hidden lg:block">
+            <div className="relative">
+              {/* Main Card */}
+              <div className="glass rounded-2xl p-8 shadow-2xl">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
+                      <ScalesIcon className="h-7 w-7 text-primary-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="font-serif font-bold text-foreground">Supreme Court</h3>
+                      <p className="text-sm text-muted-foreground">Live Case Tracker</p>
+                    </div>
+                  </div>
+                  <Badge className="bg-green-500/10 text-green-600">Live</Badge>
+                </div>
+
+                {/* Mock Case List */}
+                <div className="space-y-4">
+                  {[
+                    { case: "WP(C) 2024/1234", status: "Hearing Today", color: "bg-destructive" },
+                    { case: "SLP(Crl) 2024/567", status: "Pending", color: "bg-amber-500" },
+                    { case: "CA 2024/890", status: "Disposed", color: "bg-green-500" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between rounded-lg bg-background/50 p-4">
+                      <div>
+                        <p className="font-medium text-foreground">{item.case}</p>
+                        <p className="text-sm text-muted-foreground">Delhi High Court</p>
+                      </div>
+                      <Badge variant="secondary" className={`${item.color} text-white`}>
+                        {item.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+
+                <Button className="mt-6 w-full gap-2 bg-transparent" variant="outline">
+                  View All Cases
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Floating Elements */}
+              <div className="absolute -right-4 -top-4 glass rounded-xl p-4 shadow-lg">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent">
+                    <Play className="h-5 w-5 text-accent-foreground" fill="currentColor" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Video Lectures</p>
+                    <p className="text-sm text-muted-foreground">500+ Hours</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute -bottom-4 -left-4 glass rounded-xl p-4 shadow-lg">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
+                    <ShieldCheckIcon className="h-5 w-5 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Secure DRM</p>
+                    <p className="text-sm text-muted-foreground">Protected Access</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}

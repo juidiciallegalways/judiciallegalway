@@ -1,0 +1,375 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { BookLawIcon } from "@/components/icons/legal-icons"
+import { Search, ShoppingCart, Star, IndianRupee, Package, Heart, Eye } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+
+interface Book {
+  id: string
+  title: string
+  author: string
+  description: string
+  price: number
+  original_price: number
+  cover_url: string
+  category: string
+  pages: number
+  isbn: string
+  publisher: string
+  is_bundle: boolean
+  bundle_items: string[]
+  stock: number
+  is_published: boolean
+}
+
+const demoBooks: Book[] = [
+  {
+    id: "1",
+    title: "Complete Guide to Indian Penal Code",
+    author: "Dr. R.K. Sharma",
+    description: "Comprehensive coverage of all 511 sections with case laws, examples, and practice questions.",
+    price: 799,
+    original_price: 999,
+    cover_url: "/indian-penal-code-law-book.jpg",
+    category: "Criminal Law",
+    pages: 650,
+    isbn: "978-1234567890",
+    publisher: "Legal Publications India",
+    is_bundle: false,
+    bundle_items: [],
+    stock: 50,
+    is_published: true,
+  },
+  {
+    id: "2",
+    title: "Criminal Procedure Code Handbook",
+    author: "Justice M.N. Reddy (Retd.)",
+    description: "Step-by-step guide to criminal procedures with flowcharts and practical examples.",
+    price: 649,
+    original_price: 849,
+    cover_url: "/criminal-procedure-code-book.jpg",
+    category: "Criminal Law",
+    pages: 480,
+    isbn: "978-1234567891",
+    publisher: "Legal Publications India",
+    is_bundle: false,
+    bundle_items: [],
+    stock: 35,
+    is_published: true,
+  },
+  {
+    id: "3",
+    title: "Judiciary Exam Complete Bundle",
+    author: "Multiple Authors",
+    description: "Complete set of 5 books covering IPC, CrPC, CPC, Evidence Act, and Constitutional Law.",
+    price: 2499,
+    original_price: 3999,
+    cover_url: "/law-books-bundle-stack.jpg",
+    category: "Bundle",
+    pages: 2500,
+    isbn: "978-1234567892",
+    publisher: "Legal Publications India",
+    is_bundle: true,
+    bundle_items: ["IPC Guide", "CrPC Handbook", "CPC Manual", "Evidence Act", "Constitutional Law"],
+    stock: 20,
+    is_published: true,
+  },
+  {
+    id: "4",
+    title: "Evidence Act Simplified",
+    author: "Adv. Priya Patel",
+    description: "Easy-to-understand explanations of evidence law with landmark case studies.",
+    price: 549,
+    original_price: 699,
+    cover_url: "/evidence-act-law-book.jpg",
+    category: "Evidence Law",
+    pages: 380,
+    isbn: "978-1234567893",
+    publisher: "Legal Publications India",
+    is_bundle: false,
+    bundle_items: [],
+    stock: 45,
+    is_published: true,
+  },
+  {
+    id: "5",
+    title: "Constitutional Law of India",
+    author: "Prof. S.K. Verma",
+    description: "In-depth analysis of Indian Constitution with latest amendments and interpretations.",
+    price: 899,
+    original_price: 1199,
+    cover_url: "/constitutional-law-india-book.jpg",
+    category: "Constitutional Law",
+    pages: 720,
+    isbn: "978-1234567894",
+    publisher: "Legal Publications India",
+    is_bundle: false,
+    bundle_items: [],
+    stock: 30,
+    is_published: true,
+  },
+  {
+    id: "6",
+    title: "Civil Procedure Code Commentary",
+    author: "Dr. A.K. Singh",
+    description: "Detailed commentary on CPC with procedural aspects and case law references.",
+    price: 749,
+    original_price: 949,
+    cover_url: "/civil-procedure-code-book.jpg",
+    category: "Civil Law",
+    pages: 550,
+    isbn: "978-1234567895",
+    publisher: "Legal Publications India",
+    is_bundle: false,
+    bundle_items: [],
+    stock: 40,
+    is_published: true,
+  },
+]
+
+const categories = ["All", "Criminal Law", "Civil Law", "Constitutional Law", "Evidence Law", "Bundle"]
+
+export function StoreContent() {
+  const [books, setBooks] = useState<Book[]>(demoBooks)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("All")
+  const [sortBy, setSortBy] = useState("popular")
+  const [cart, setCart] = useState<Map<string, number>>(new Map())
+  const [wishlist, setWishlist] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    async function fetchBooks() {
+      const supabase = createClient()
+      const { data } = await supabase.from("books").select("*").eq("is_published", true)
+
+      if (data && data.length > 0) {
+        setBooks(data)
+      }
+    }
+    fetchBooks()
+  }, [])
+
+  const filteredBooks = books.filter((book) => {
+    const matchesSearch =
+      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      book.author.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory =
+      selectedCategory === "All" ||
+      book.category === selectedCategory ||
+      (selectedCategory === "Bundle" && book.is_bundle)
+    return matchesSearch && matchesCategory
+  })
+
+  const sortedBooks = [...filteredBooks].sort((a, b) => {
+    if (sortBy === "price-low") return a.price - b.price
+    if (sortBy === "price-high") return b.price - a.price
+    if (sortBy === "newest") return 0
+    return 0
+  })
+
+  const addToCart = (bookId: string) => {
+    setCart((prev) => {
+      const next = new Map(prev)
+      next.set(bookId, (next.get(bookId) || 0) + 1)
+      return next
+    })
+  }
+
+  const toggleWishlist = (bookId: string) => {
+    setWishlist((prev) => {
+      const next = new Set(prev)
+      if (next.has(bookId)) {
+        next.delete(bookId)
+      } else {
+        next.add(bookId)
+      }
+      return next
+    })
+  }
+
+  const cartTotal = Array.from(cart.entries()).reduce((total, [bookId, qty]) => {
+    const book = books.find((b) => b.id === bookId)
+    return total + (book?.price || 0) * qty
+  }, 0)
+
+  const cartItemCount = Array.from(cart.values()).reduce((a, b) => a + b, 0)
+
+  const BookCard = ({ book }: { book: Book }) => {
+    const discount = Math.round((1 - book.price / book.original_price) * 100)
+
+    return (
+      <Card className="group overflow-hidden hover:shadow-xl transition-all">
+        <div className="relative aspect-[3/4] overflow-hidden bg-muted">
+          <img
+            src={book.cover_url || "/placeholder.svg"}
+            alt={book.title}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          {discount > 0 && (
+            <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground">{discount}% OFF</Badge>
+          )}
+          {book.is_bundle && (
+            <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground gap-1">
+              <Package className="h-3 w-3" />
+              Bundle
+            </Badge>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white"
+            onClick={() => toggleWishlist(book.id)}
+          >
+            <Heart className={`h-5 w-5 ${wishlist.has(book.id) ? "fill-destructive text-destructive" : ""}`} />
+          </Button>
+        </div>
+
+        <CardContent className="p-4">
+          <p className="text-sm text-muted-foreground mb-1">{book.author}</p>
+          <h3 className="font-serif font-semibold text-foreground line-clamp-2 mb-2">{book.title}</h3>
+
+          {book.is_bundle && (
+            <p className="text-xs text-muted-foreground mb-2">
+              Includes: {book.bundle_items.slice(0, 3).join(", ")}
+              {book.bundle_items.length > 3 && ` +${book.bundle_items.length - 3} more`}
+            </p>
+          )}
+
+          <div className="flex items-center gap-1 mb-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Star key={i} className="h-4 w-4 fill-accent text-accent" />
+            ))}
+            <span className="text-sm text-muted-foreground ml-1">(4.8)</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center">
+              <IndianRupee className="h-4 w-4 text-foreground" />
+              <span className="text-xl font-bold text-foreground">{book.price}</span>
+            </div>
+            {book.original_price > book.price && (
+              <span className="text-sm text-muted-foreground line-through">₹{book.original_price}</span>
+            )}
+          </div>
+        </CardContent>
+
+        <CardFooter className="p-4 pt-0 flex gap-2">
+          <Button className="flex-1 gap-2" onClick={() => addToCart(book.id)}>
+            <ShoppingCart className="h-4 w-4" />
+            Add to Cart
+          </Button>
+          <Button variant="outline" size="icon" asChild>
+            <Link href={`/store/${book.id}`}>
+              <Eye className="h-4 w-4" />
+            </Link>
+          </Button>
+        </CardFooter>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 lg:px-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="font-serif text-3xl font-bold text-foreground md:text-4xl">Book Store</h1>
+          <p className="mt-2 text-muted-foreground">Premium law books and bundles for exam preparation</p>
+        </div>
+
+        {/* Cart Summary */}
+        <Link href="/store/cart">
+          <Button variant="outline" className="gap-2 bg-transparent">
+            <ShoppingCart className="h-5 w-5" />
+            Cart ({cartItemCount}){cartTotal > 0 && <Badge variant="secondary">₹{cartTotal}</Badge>}
+          </Button>
+        </Link>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search books by title or author..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="popular">Most Popular</SelectItem>
+            <SelectItem value="newest">Newest</SelectItem>
+            <SelectItem value="price-low">Price: Low to High</SelectItem>
+            <SelectItem value="price-high">Price: High to Low</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Category Tabs */}
+      <Tabs defaultValue="All" value={selectedCategory} onValueChange={setSelectedCategory} className="space-y-6">
+        <TabsList className="flex-wrap h-auto gap-2">
+          {categories.map((cat) => (
+            <TabsTrigger key={cat} value={cat}>
+              {cat}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value={selectedCategory} className="mt-0">
+          {sortedBooks.length === 0 ? (
+            <Card className="p-12 text-center">
+              <BookLawIcon className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="font-serif text-xl font-semibold text-foreground mb-2">No books found</h3>
+              <p className="text-muted-foreground">Try adjusting your search or filters</p>
+            </Card>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {sortedBooks.map((book) => (
+                <BookCard key={book.id} book={book} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* People Also Buy Section */}
+      <section className="mt-16">
+        <h2 className="font-serif text-2xl font-bold text-foreground mb-6">People Also Buy</h2>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {books.slice(0, 4).map((book) => (
+            <Card key={book.id} className="flex items-center gap-4 p-4">
+              <img
+                src={book.cover_url || "/placeholder.svg"}
+                alt={book.title}
+                className="w-16 h-20 object-cover rounded"
+              />
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-foreground text-sm line-clamp-2">{book.title}</h3>
+                <div className="flex items-center gap-1 mt-1">
+                  <IndianRupee className="h-3 w-3" />
+                  <span className="font-bold">{book.price}</span>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => addToCart(book.id)}>
+                Add
+              </Button>
+            </Card>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}

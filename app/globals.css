@@ -202,3 +202,154 @@
 .seal-pattern {
   background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L35 25 L55 30 L35 35 L30 55 L25 35 L5 30 L25 25 Z' fill='%23B39563' fill-opacity='0.05'/%3E%3C/svg%3E");
 }
+
+/* CTA Section Animations */
+
+/* Animated gradient background */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-gradient-bg {
+  background: linear-gradient(
+    135deg,
+    oklch(0.3 0.04 250) 0%,
+    oklch(0.28 0.05 260) 25%,
+    oklch(0.32 0.04 245) 50%,
+    oklch(0.29 0.05 255) 75%,
+    oklch(0.3 0.04 250) 100%
+  );
+  background-size: 200% 200%;
+  animation: gradient-shift 10s ease infinite;
+}
+
+/* Button pulse animation on entrance */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(179, 149, 99, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px rgba(179, 149, 99, 0.2);
+  }
+}
+
+.cta-button-pulse {
+  animation: pulse-glow 2s ease-in-out 0.5s 2;
+}
+
+/* Button hover glow effect */
+.cta-button-glow {
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.cta-button-glow:hover {
+  box-shadow: 0 8px 24px rgba(179, 149, 99, 0.3), 0 4px 12px rgba(179, 149, 99, 0.2);
+}
+
+/* Checkmark color transition */
+@keyframes checkmark-color {
+  0% {
+    color: transparent;
+  }
+  100% {
+    color: var(--accent);
+  }
+}
+
+.checkmark-animate {
+  animation: checkmark-color 0.3s ease-out forwards;
+}
+
+/* Mobile Touch Optimizations */
+
+/* Improve scroll performance with touch-action */
+body {
+  touch-action: pan-y pan-x;
+}
+
+/* Momentum scrolling for better mobile experience */
+.carousel-container,
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+}
+
+/* Minimum touch target size for mobile (44x44px) */
+@media (max-width: 768px) {
+  button,
+  a,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  .interactive-element {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Ensure proper spacing for touch targets */
+  .touch-target {
+    padding: 12px;
+  }
+}
+
+/* Disable hover effects on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .hover-effect:hover,
+  .card-hover:hover,
+  button:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Keep focus states for accessibility */
+  .hover-effect:focus-visible,
+  .card-hover:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Disable non-essential animations */
+  .animated-gradient-bg {
+    animation: none !important;
+    background: oklch(0.3 0.04 250);
+  }
+
+  .cta-button-pulse {
+    animation: none !important;
+  }
+
+  /* Keep essential transitions for usability */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
+  }
+
+  /* Disable parallax effects */
+  [style*="transform: translate3d"] {
+    transform: none !important;
+  }
+}

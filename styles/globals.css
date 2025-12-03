@@ -123,3 +123,151 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Performance Optimizations */
+@layer utilities {
+  /* GPU Acceleration for animated elements */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  /* Will-change optimization for active animations */
+  .will-change-transform {
+    will-change: transform;
+  }
+
+  .will-change-opacity {
+    will-change: opacity;
+  }
+
+  .will-change-transform-opacity {
+    will-change: transform, opacity;
+  }
+
+  /* Remove will-change after animation completes */
+  .animation-complete {
+    will-change: auto;
+  }
+
+  /* CSS Containment for performance */
+  .contain-layout {
+    contain: layout;
+  }
+
+  .contain-paint {
+    contain: paint;
+  }
+
+  .contain-strict {
+    contain: strict;
+  }
+
+  /* Touch optimization */
+  .touch-action-pan-y {
+    touch-action: pan-y;
+  }
+
+  .touch-action-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Smooth scrolling with momentum */
+  .momentum-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+  }
+
+  /* Animated gradient background for CTA */
+  .animated-gradient-bg {
+    background: linear-gradient(135deg, 
+      hsl(var(--primary)) 0%, 
+      hsl(var(--primary) / 0.9) 50%, 
+      hsl(var(--primary)) 100%);
+    background-size: 200% 200%;
+    animation: gradient-shift 10s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  /* CTA button pulse effect */
+  .cta-button-pulse {
+    animation: subtle-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes subtle-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.95;
+    }
+  }
+
+  /* CTA button glow effect on hover */
+  .cta-button-glow {
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+  }
+
+  .cta-button-glow:hover {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  }
+
+  /* Checkmark animation */
+  .checkmark-animate {
+    animation: checkmark-pop 0.3s ease-out;
+  }
+
+  @keyframes checkmark-pop {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* Glass effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Seal pattern background */
+  .seal-pattern {
+    background-image: radial-gradient(circle at 25px 25px, rgba(255, 255, 255, 0.1) 2%, transparent 0%),
+                      radial-gradient(circle at 75px 75px, rgba(255, 255, 255, 0.1) 2%, transparent 0%);
+    background-size: 100px 100px;
+  }
+
+  /* Touch target optimization */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Card hover optimization */
+  .card-hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  /* Carousel container optimization */
+  .carousel-container {
+    contain: layout style;
+  }
+}

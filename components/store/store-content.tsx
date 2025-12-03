@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookLawIcon } from "@/components/icons/legal-icons"
-import { Search, ShoppingCart, Star, IndianRupee, Package, Heart, Eye } from "lucide-react"
+import { Search, ShoppingCart, Star, IndianRupee, Package, Heart, Eye, TrendingUp, Check } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 interface Book {
@@ -204,95 +205,185 @@ export function StoreContent() {
 
   const BookCard = ({ book }: { book: Book }) => {
     const discount = Math.round((1 - book.price / book.original_price) * 100)
+    const inCart = cart.has(book.id)
 
     return (
-      <Card className="group overflow-hidden hover:shadow-xl transition-all">
-        <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-          <img
-            src={book.cover_url || "/placeholder.svg"}
-            alt={book.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-          {discount > 0 && (
-            <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground">{discount}% OFF</Badge>
-          )}
-          {book.is_bundle && (
-            <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground gap-1">
-              <Package className="h-3 w-3" />
-              Bundle
-            </Badge>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white"
-            onClick={() => toggleWishlist(book.id)}
-          >
-            <Heart className={`h-5 w-5 ${wishlist.has(book.id) ? "fill-destructive text-destructive" : ""}`} />
-          </Button>
-        </div>
-
-        <CardContent className="p-4">
-          <p className="text-sm text-muted-foreground mb-1">{book.author}</p>
-          <h3 className="font-serif font-semibold text-foreground line-clamp-2 mb-2">{book.title}</h3>
-
-          {book.is_bundle && (
-            <p className="text-xs text-muted-foreground mb-2">
-              Includes: {book.bundle_items.slice(0, 3).join(", ")}
-              {book.bundle_items.length > 3 && ` +${book.bundle_items.length - 3} more`}
-            </p>
-          )}
-
-          <div className="flex items-center gap-1 mb-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className="h-4 w-4 fill-accent text-accent" />
-            ))}
-            <span className="text-sm text-muted-foreground ml-1">(4.8)</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="flex items-center">
-              <IndianRupee className="h-4 w-4 text-foreground" />
-              <span className="text-xl font-bold text-foreground">{book.price}</span>
-            </div>
-            {book.original_price > book.price && (
-              <span className="text-sm text-muted-foreground line-through">₹{book.original_price}</span>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        whileHover={{ y: -8 }}
+      >
+        <Card className="group overflow-hidden hover:shadow-xl transition-all h-full flex flex-col rounded-xl">
+          <div className="relative aspect-[3/4] overflow-hidden bg-muted">
+            <motion.img
+              src={book.cover_url || "/placeholder.svg"}
+              alt={book.title}
+              className="h-full w-full object-cover"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
+            />
+            {discount > 0 && (
+              <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground shadow-lg">
+                {discount}% OFF
+              </Badge>
             )}
-          </div>
-        </CardContent>
+            {book.is_bundle && (
+              <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground gap-1 shadow-lg">
+                <Package className="h-3 w-3" />
+                Bundle
+              </Badge>
+            )}
+            <motion.div
+              className="absolute top-3 right-3"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white shadow-lg"
+                onClick={() => toggleWishlist(book.id)}
+              >
+                <Heart className={`h-5 w-5 ${wishlist.has(book.id) ? "fill-destructive text-destructive" : ""}`} />
+              </Button>
+            </motion.div>
 
-        <CardFooter className="p-4 pt-0 flex gap-2">
-          <Button className="flex-1 gap-2" onClick={() => addToCart(book.id)}>
-            <ShoppingCart className="h-4 w-4" />
-            Add to Cart
-          </Button>
-          <Button variant="outline" size="icon" asChild>
-            <Link href={`/store/${book.id}`}>
-              <Eye className="h-4 w-4" />
-            </Link>
-          </Button>
-        </CardFooter>
-      </Card>
+            {/* Stock Badge */}
+            {book.stock < 10 && (
+              <Badge variant="destructive" className="absolute bottom-3 left-3 shadow-lg">
+                Only {book.stock} left!
+              </Badge>
+            )}
+
+            {/* Hover Overlay */}
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                whileHover={{ scale: 1 }}
+                className="text-white text-center px-4"
+              >
+                <Eye className="h-8 w-8 mx-auto mb-2" />
+                <p className="text-sm font-medium">Quick View</p>
+              </motion.div>
+            </div>
+          </div>
+
+          <CardContent className="p-5 flex-1 flex flex-col">
+            <Badge variant="outline" className="w-fit mb-2 text-xs">{book.category}</Badge>
+            <p className="text-sm text-muted-foreground mb-1">{book.author}</p>
+            <h3 className="font-serif font-semibold text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+              {book.title}
+            </h3>
+
+            {book.is_bundle && (
+              <div className="mb-3 p-2 rounded-lg bg-accent/5 border border-accent/20">
+                <p className="text-xs font-medium text-accent mb-1">Bundle Includes:</p>
+                <ul className="text-xs text-muted-foreground space-y-0.5">
+                  {book.bundle_items.slice(0, 3).map((item, i) => (
+                    <li key={i} className="flex items-center gap-1">
+                      <Check className="h-3 w-3 text-accent" />
+                      {item}
+                    </li>
+                  ))}
+                  {book.bundle_items.length > 3 && (
+                    <li className="text-accent">+{book.bundle_items.length - 3} more items</li>
+                  )}
+                </ul>
+              </div>
+            )}
+
+            <div className="flex items-center gap-1 mb-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+              ))}
+              <span className="text-sm text-muted-foreground ml-1">(4.8)</span>
+            </div>
+
+            <div className="mt-auto pt-3 border-t">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center">
+                  <IndianRupee className="h-5 w-5 text-foreground" />
+                  <span className="text-2xl font-bold text-foreground">{book.price}</span>
+                </div>
+                {book.original_price > book.price && (
+                  <span className="text-sm text-muted-foreground line-through">₹{book.original_price}</span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{book.pages} pages • ISBN: {book.isbn}</p>
+            </div>
+          </CardContent>
+
+          <CardFooter className="p-5 pt-0 flex gap-2">
+            <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button 
+                className="w-full gap-2" 
+                onClick={() => addToCart(book.id)}
+                variant={inCart ? "secondary" : "default"}
+              >
+                {inCart ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    In Cart
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="h-4 w-4" />
+                    Add to Cart
+                  </>
+                )}
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <Button variant="outline" size="icon" asChild>
+                <Link href={`/store/${book.id}`}>
+                  <Eye className="h-4 w-4" />
+                </Link>
+              </Button>
+            </motion.div>
+          </CardFooter>
+        </Card>
+      </motion.div>
     )
   }
 
   return (
     <div className="container mx-auto px-4 py-8 lg:px-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8"
+      >
         <div>
-          <h1 className="font-serif text-3xl font-bold text-foreground md:text-4xl">Book Store</h1>
-          <p className="mt-2 text-muted-foreground">Premium law books and bundles for exam preparation</p>
+          <div className="flex items-center gap-3 mb-2">
+            <TrendingUp className="h-6 w-6 text-primary" />
+            <span className="text-sm font-medium text-primary">Showing {sortedBooks.length} books</span>
+          </div>
         </div>
 
         {/* Cart Summary */}
-        <Link href="/store/cart">
-          <Button variant="outline" className="gap-2 bg-transparent">
-            <ShoppingCart className="h-5 w-5" />
-            Cart ({cartItemCount}){cartTotal > 0 && <Badge variant="secondary">₹{cartTotal}</Badge>}
-          </Button>
-        </Link>
-      </div>
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Link href="/store/cart">
+            <Button variant="outline" className="gap-2 bg-transparent relative">
+              <ShoppingCart className="h-5 w-5" />
+              Cart ({cartItemCount})
+              {cartTotal > 0 && (
+                <Badge variant="secondary" className="ml-1">₹{cartTotal}</Badge>
+              )}
+              {cartItemCount > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-bold text-destructive-foreground"
+                >
+                  {cartItemCount}
+                </motion.span>
+              )}
+            </Button>
+          </Link>
+        </motion.div>
+      </motion.div>
 
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -330,46 +421,81 @@ export function StoreContent() {
 
         <TabsContent value={selectedCategory} className="mt-0">
           {sortedBooks.length === 0 ? (
-            <Card className="p-12 text-center">
-              <BookLawIcon className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="font-serif text-xl font-semibold text-foreground mb-2">No books found</h3>
-              <p className="text-muted-foreground">Try adjusting your search or filters</p>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <Card className="p-12 text-center">
+                <BookLawIcon className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="font-serif text-xl font-semibold text-foreground mb-2">No books found</h3>
+                <p className="text-muted-foreground">Try adjusting your search or filters</p>
+              </Card>
+            </motion.div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <motion.div
+              className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.1
+                  }
+                }
+              }}
+            >
               {sortedBooks.map((book) => (
                 <BookCard key={book.id} book={book} />
               ))}
-            </div>
+            </motion.div>
           )}
         </TabsContent>
       </Tabs>
 
       {/* People Also Buy Section */}
-      <section className="mt-16">
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+        className="mt-16"
+      >
         <h2 className="font-serif text-2xl font-bold text-foreground mb-6">People Also Buy</h2>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {books.slice(0, 4).map((book) => (
-            <Card key={book.id} className="flex items-center gap-4 p-4">
-              <img
-                src={book.cover_url || "/placeholder.svg"}
-                alt={book.title}
-                className="w-16 h-20 object-cover rounded"
-              />
-              <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-foreground text-sm line-clamp-2">{book.title}</h3>
-                <div className="flex items-center gap-1 mt-1">
-                  <IndianRupee className="h-3 w-3" />
-                  <span className="font-bold">{book.price}</span>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {books.slice(0, 4).map((book, i) => (
+            <motion.div
+              key={book.id}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              whileHover={{ scale: 1.02 }}
+            >
+              <Card className="flex items-center gap-4 p-4 hover:shadow-lg transition-shadow">
+                <img
+                  src={book.cover_url || "/placeholder.svg"}
+                  alt={book.title}
+                  className="w-16 h-20 object-cover rounded shadow-sm"
+                />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-foreground text-sm line-clamp-2">{book.title}</h3>
+                  <div className="flex items-center gap-1 mt-1">
+                    <IndianRupee className="h-3 w-3" />
+                    <span className="font-bold">{book.price}</span>
+                  </div>
                 </div>
-              </div>
-              <Button size="sm" variant="outline" onClick={() => addToCart(book.id)}>
-                Add
-              </Button>
-            </Card>
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <Button size="sm" variant="outline" onClick={() => addToCart(book.id)}>
+                    Add
+                  </Button>
+                </motion.div>
+              </Card>
+            </motion.div>
           ))}
         </div>
-      </section>
+      </motion.section>
     </div>
   )
 }

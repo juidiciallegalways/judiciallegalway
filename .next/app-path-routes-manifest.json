@@ -1,0 +1,15 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/admin/page": "/admin",
+  "/auth/login/page": "/auth/login",
+  "/auth/signup/page": "/auth/signup",
+  "/court-tracker/page": "/court-tracker",
+  "/page": "/",
+  "/profile/page": "/profile",
+  "/reader/[id]/page": "/reader/[id]",
+  "/store/[id]/page": "/store/[id]",
+  "/store/page": "/store",
+  "/study-materials/[id]/page": "/study-materials/[id]",
+  "/study-materials/page": "/study-materials"
+}

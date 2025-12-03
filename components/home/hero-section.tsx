@@ -1,19 +1,52 @@
 "use client"
 
 import Link from "next/link"
+import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScalesIcon, ShieldCheckIcon, CourtBuildingIcon } from "@/components/icons/legal-icons"
 import { BookOpen, ArrowRight, Play } from "lucide-react"
+import { useParallax } from "@/hooks/use-parallax"
+import { fadeInUp } from "@/lib/animation-variants"
+import { useShouldEnableParallax, useShouldAnimate } from "@/hooks/use-media-query"
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
 
 export function HeroSection() {
+  // Conditionally enable parallax based on viewport
+  const shouldEnableParallax = useShouldEnableParallax()
+  const shouldAnimate = useShouldAnimate()
+  const prefersReducedMotion = useReducedMotion()
+  
+  // Disable animations if user prefers reduced motion
+  const enableAnimations = shouldAnimate && !prefersReducedMotion
+  const enableParallax = shouldEnableParallax && !prefersReducedMotion
+  
+  // Apply parallax to background pattern, disabled on mobile (< 1024px) or if reduced motion
+  const { offset: bgOffset, ref: bgRef } = useParallax({ 
+    speed: 0.5, 
+    disabled: !enableParallax
+  })
+
+  // Apply parallax to floating cards with slower speed
+  const { offset: cardOffset, ref: cardRef } = useParallax({ 
+    speed: 0.3, 
+    disabled: !enableParallax
+  })
+
   return (
     <section className="relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 seal-pattern opacity-30" />
+      {/* Background Pattern with Parallax */}
+      <div 
+        ref={bgRef as React.RefObject<HTMLDivElement>}
+        className="absolute inset-0 seal-pattern opacity-30" 
+        style={{
+          transform: `translate3d(0, ${bgOffset}px, 0)`,
+          willChange: 'transform'
+        }}
+      />
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-muted/30" />
 
-      <div className="container relative mx-auto px-4 py-16 lg:px-8 lg:py-24">
+      <div className="container relative mx-auto px-4 py-12 md:py-16 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           {/* Content */}
           <div className="max-w-2xl">
@@ -25,38 +58,119 @@ export function HeroSection() {
               Trusted by 50,000+ Law Students
             </Badge>
 
-            <h1 className="font-serif text-4xl font-bold leading-tight tracking-tight text-foreground md:text-5xl lg:text-6xl">
+            <motion.h1 
+              className="font-serif text-4xl font-bold leading-tight tracking-tight text-foreground md:text-5xl lg:text-6xl"
+              initial={enableAnimations ? "hidden" : false}
+              animate={enableAnimations ? "visible" : false}
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { 
+                  opacity: 1, 
+                  y: 0,
+                  transition: { duration: 0.6, delay: 0.2, ease: "easeOut" }
+                }
+              }}
+            >
               <span className="text-balance">India&apos;s Most Reliable</span>{" "}
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Legal Learning
               </span>{" "}
               <span className="text-balance">&amp; Court Tracking Platform</span>
-            </h1>
+            </motion.h1>
 
-            <p className="mt-6 text-lg text-muted-foreground text-pretty">
+            <motion.p 
+              className="mt-6 text-lg text-muted-foreground text-pretty"
+              initial={enableAnimations ? "hidden" : false}
+              animate={enableAnimations ? "visible" : false}
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { 
+                  opacity: 1, 
+                  y: 0,
+                  transition: { duration: 0.6, delay: 0.4, ease: "easeOut" }
+                }
+              }}
+            >
               Access secure DRM-protected study materials, track court cases in real-time, and prepare for legal exams
               with expert resources. Your complete companion for judiciary preparation.
-            </p>
+            </motion.p>
 
             {/* CTA Buttons */}
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Button size="lg" className="gap-2 px-8" asChild>
-                <Link href="/study-materials">
-                  <BookOpen className="h-5 w-5" />
-                  Explore Study Material
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="gap-2 px-8 bg-transparent" asChild>
-                <Link href="/court-tracker">
-                  <CourtBuildingIcon className="h-5 w-5" />
-                  Track Court Cases
-                </Link>
-              </Button>
-            </div>
+            <motion.div 
+              className="mt-8 flex flex-wrap items-center gap-4"
+              initial={enableAnimations ? "hidden" : false}
+              animate={enableAnimations ? "visible" : false}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.15,
+                    delayChildren: 0.6
+                  }
+                }
+              }}
+            >
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, x: -30 },
+                  visible: { 
+                    opacity: 1, 
+                    x: 0,
+                    transition: { duration: 0.4, ease: "easeOut" }
+                  }
+                }}
+                whileHover={enableAnimations ? { scale: 1.05 } : undefined}
+                transition={{ duration: 0.2 }}
+              >
+                <Button size="lg" className="gap-2 px-8" asChild>
+                  <Link href="/study-materials">
+                    <BookOpen className="h-5 w-5" />
+                    Explore Study Material
+                  </Link>
+                </Button>
+              </motion.div>
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, x: -30 },
+                  visible: { 
+                    opacity: 1, 
+                    x: 0,
+                    transition: { duration: 0.4, ease: "easeOut" }
+                  }
+                }}
+                whileHover={enableAnimations ? { scale: 1.05 } : undefined}
+                transition={{ duration: 0.2 }}
+              >
+                <Button size="lg" variant="outline" className="gap-2 px-8 bg-transparent" asChild>
+                  <Link href="/court-tracker">
+                    <CourtBuildingIcon className="h-5 w-5" />
+                    Track Court Cases
+                  </Link>
+                </Button>
+              </motion.div>
+            </motion.div>
 
             {/* Trust Indicators */}
-            <div className="mt-12 flex flex-wrap items-center gap-8">
-              <div className="flex items-center gap-3">
+            <motion.div 
+              className="mt-12 flex flex-wrap items-center gap-8"
+              initial={enableAnimations ? "hidden" : false}
+              animate={enableAnimations ? "visible" : false}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.15,
+                    delayChildren: 0.6
+                  }
+                }
+              }}
+            >
+              <motion.div 
+                className="flex items-center gap-3"
+                variants={fadeInUp}
+              >
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                   <ShieldCheckIcon className="h-6 w-6 text-primary" />
                 </div>
@@ -64,8 +178,11 @@ export function HeroSection() {
                   <p className="font-semibold text-foreground">DRM Secure</p>
                   <p className="text-sm text-muted-foreground">Protected Content</p>
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
+              </motion.div>
+              <motion.div 
+                className="flex items-center gap-3"
+                variants={fadeInUp}
+              >
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
                   <ScalesIcon className="h-6 w-6 text-accent" />
                 </div>
@@ -73,8 +190,11 @@ export function HeroSection() {
                   <p className="font-semibold text-foreground">Real-Time</p>
                   <p className="text-sm text-muted-foreground">Court Updates</p>
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
+              </motion.div>
+              <motion.div 
+                className="flex items-center gap-3"
+                variants={fadeInUp}
+              >
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                   <BookOpen className="h-6 w-6 text-primary" />
                 </div>
@@ -82,15 +202,37 @@ export function HeroSection() {
                   <p className="font-semibold text-foreground">Exam Focused</p>
                   <p className="text-sm text-muted-foreground">Study Resources</p>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
 
           {/* Visual */}
           <div className="relative hidden lg:block">
-            <div className="relative">
+            <div 
+              ref={cardRef as React.RefObject<HTMLDivElement>}
+              className="relative"
+              style={{
+                transform: `translate3d(0, ${cardOffset}px, 0)`,
+                willChange: 'transform'
+              }}
+            >
               {/* Main Card */}
-              <div className="glass rounded-2xl p-8 shadow-2xl">
+              <motion.div 
+                className="glass rounded-xl p-8 shadow-2xl"
+                animate={enableAnimations ? {
+                  y: [0, -10, 0],
+                } : undefined}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                whileHover={enableAnimations ? {
+                  y: -15,
+                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                  transition: { duration: 0.3 }
+                } : undefined}
+              >
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
@@ -127,10 +269,26 @@ export function HeroSection() {
                   View All Cases
                   <ArrowRight className="h-4 w-4" />
                 </Button>
-              </div>
+              </motion.div>
 
               {/* Floating Elements */}
-              <div className="absolute -right-4 -top-4 glass rounded-xl p-4 shadow-lg">
+              <motion.div 
+                className="absolute -right-4 -top-4 glass rounded-xl p-4 shadow-lg"
+                animate={enableAnimations ? {
+                  y: [0, -8, 0],
+                } : undefined}
+                transition={{
+                  duration: 3.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.5
+                }}
+                whileHover={enableAnimations ? {
+                  y: -12,
+                  boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.25)",
+                  transition: { duration: 0.3 }
+                } : undefined}
+              >
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent">
                     <Play className="h-5 w-5 text-accent-foreground" fill="currentColor" />
@@ -140,9 +298,25 @@ export function HeroSection() {
                     <p className="text-sm text-muted-foreground">500+ Hours</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="absolute -bottom-4 -left-4 glass rounded-xl p-4 shadow-lg">
+              <motion.div 
+                className="absolute -bottom-4 -left-4 glass rounded-xl p-4 shadow-lg"
+                animate={enableAnimations ? {
+                  y: [0, -8, 0],
+                } : undefined}
+                transition={{
+                  duration: 3.8,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1
+                }}
+                whileHover={enableAnimations ? {
+                  y: -12,
+                  boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.25)",
+                  transition: { duration: 0.3 }
+                } : undefined}
+              >
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
                     <ShieldCheckIcon className="h-5 w-5 text-primary-foreground" />
@@ -152,7 +326,7 @@ export function HeroSection() {
                     <p className="text-sm text-muted-foreground">Protected Access</p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>

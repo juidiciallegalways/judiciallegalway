@@ -6,7 +6,10 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "test:performance": "node __tests__/validation/performance-validation.js",
+    "test:lighthouse": "lighthouse http://localhost:3000 --preset=desktop --output=html --output-path=./lighthouse-report.html",
+    "test:lighthouse:mobile": "lighthouse http://localhost:3000 --preset=mobile --output=html --output-path=./lighthouse-mobile-report.html"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -46,6 +49,7 @@
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
+    "framer-motion": "^12.23.25",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
     "next": "16.0.7",
@@ -67,7 +71,9 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "lighthouse": "^12.8.2",
     "postcss": "^8.5",
+    "puppeteer": "^22.15.0",
     "tailwindcss": "^4.1.9",
     "tw-animate-css": "1.3.3",
     "typescript": "^5"

@@ -1,10 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Quote, ChevronLeft, ChevronRight, Star } from "lucide-react"
+import { slideInFromLeft } from "@/lib/animation-variants"
 
 const testimonials = [
   {
@@ -45,6 +47,55 @@ const testimonials = [
   },
 ]
 
+// Animation variants for testimonial transitions
+const testimonialVariants = {
+  enter: {
+    opacity: 0,
+    scale: 0.95,
+    x: 50,
+  },
+  center: {
+    opacity: 1,
+    scale: 1,
+    x: 0,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    x: -50,
+    transition: {
+      duration: 0.6,
+      ease: "easeIn",
+    },
+  },
+}
+
+// Stagger container for testimonial content
+const contentStaggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+}
+
+// Individual content item animation
+const contentItem = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+}
+
 export function Testimonials() {
   const [currentIndex, setCurrentIndex] = useState(0)
 
@@ -57,7 +108,7 @@ export function Testimonials() {
   }
 
   return (
-    <section className="py-16 lg:py-24 bg-muted/30">
+    <section className="py-12 md:py-16 bg-muted/30">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="mx-auto max-w-3xl text-center mb-12">
           <h2 className="font-serif text-3xl font-bold text-foreground md:text-4xl">Trusted by Legal Professionals</h2>
@@ -68,39 +119,91 @@ export function Testimonials() {
 
         <div className="relative mx-auto max-w-4xl">
           {/* Main Testimonial Card */}
-          <Card className="glass border-0 shadow-xl">
+          <motion.div
+            whileHover={{ y: -4 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          >
+            <Card className="glass border-0 shadow-xl group hover:shadow-2xl transition-shadow duration-300 overflow-hidden rounded-xl">
             <CardContent className="p-8 lg:p-12">
-              <Quote className="h-12 w-12 text-accent/30 mb-6" />
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentIndex}
+                  variants={testimonialVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                >
+                  <motion.div
+                    variants={contentStaggerContainer}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <motion.div variants={contentItem}>
+                      <Quote className="h-12 w-12 text-accent/30 mb-6 transition-transform duration-300 group-hover:scale-110" />
+                    </motion.div>
 
-              <p className="text-xl lg:text-2xl text-foreground leading-relaxed mb-8">
-                &ldquo;{testimonials[currentIndex].content}&rdquo;
-              </p>
+                    <motion.p 
+                      variants={contentItem}
+                      className="text-xl lg:text-2xl text-foreground leading-relaxed mb-8"
+                    >
+                      &ldquo;{testimonials[currentIndex].content}&rdquo;
+                    </motion.p>
 
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-14 w-14 border-2 border-accent">
-                    <AvatarImage src={testimonials[currentIndex].avatar || "/placeholder.svg"} />
-                    <AvatarFallback className="bg-primary text-primary-foreground">
-                      {testimonials[currentIndex].name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-serif font-semibold text-foreground">{testimonials[currentIndex].name}</p>
-                    <p className="text-sm text-muted-foreground">{testimonials[currentIndex].role}</p>
-                  </div>
-                </div>
+                    <div className="flex items-center justify-between flex-wrap gap-4">
+                      <motion.div 
+                        variants={slideInFromLeft}
+                        className="flex items-center gap-4"
+                      >
+                        <Avatar className="h-14 w-14 border-2 border-accent">
+                          <AvatarImage 
+                            src={testimonials[currentIndex].avatar || "/placeholder.svg"}
+                            loading="lazy"
+                          />
+                          <AvatarFallback className="bg-primary text-primary-foreground">
+                            {testimonials[currentIndex].name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <motion.p 
+                            variants={contentItem}
+                            className="font-serif font-semibold text-foreground"
+                          >
+                            {testimonials[currentIndex].name}
+                          </motion.p>
+                          <motion.p 
+                            variants={contentItem}
+                            className="text-sm text-muted-foreground"
+                          >
+                            {testimonials[currentIndex].role}
+                          </motion.p>
+                        </div>
+                      </motion.div>
 
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: testimonials[currentIndex].rating }).map((_, i) => (
-                    <Star key={i} className="h-5 w-5 fill-accent text-accent" />
-                  ))}
-                </div>
-              </div>
+                      <motion.div 
+                        variants={contentItem}
+                        className="flex items-center gap-1"
+                      >
+                        {Array.from({ length: testimonials[currentIndex].rating }).map((_, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.5 + i * 0.1, duration: 0.3 }}
+                          >
+                            <Star className="h-5 w-5 fill-accent text-accent" />
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </AnimatePresence>
             </CardContent>
           </Card>
+          </motion.div>
 
           {/* Navigation */}
           <div className="flex items-center justify-center gap-4 mt-8">
@@ -111,13 +214,20 @@ export function Testimonials() {
 
             <div className="flex items-center gap-2">
               {testimonials.map((_, i) => (
-                <button
+                <motion.button
                   key={i}
                   onClick={() => setCurrentIndex(i)}
-                  className={`h-2.5 w-2.5 rounded-full transition-colors ${
+                  className={`h-2.5 w-2.5 rounded-full transition-all duration-300 ${
                     i === currentIndex ? "bg-primary" : "bg-border"
                   }`}
                   aria-label={`Go to testimonial ${i + 1}`}
+                  whileHover={{ scale: 1.1 }}
+                  animate={{
+                    scale: i === currentIndex ? 1.2 : 1,
+                  }}
+                  style={{
+                    animation: i === currentIndex ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none',
+                  }}
                 />
               ))}
             </div>
@@ -127,6 +237,17 @@ export function Testimonials() {
               <span className="sr-only">Next testimonial</span>
             </Button>
           </div>
+          
+          <style jsx>{`
+            @keyframes pulse {
+              0%, 100% {
+                opacity: 1;
+              }
+              50% {
+                opacity: 0.7;
+              }
+            }
+          `}</style>
         </div>
 
         {/* Logos/Trust Badges */}

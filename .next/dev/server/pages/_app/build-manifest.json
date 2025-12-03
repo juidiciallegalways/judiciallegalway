@@ -1,0 +1,23 @@
+{
+  "devFiles": [],
+  "ampDevFiles": [],
+  "polyfillFiles": [],
+  "lowPriorityFiles": [],
+  "rootMainFiles": [],
+  "pages": {
+    "/_app": [
+      "static/chunks/42e73_next_dist_compiled_342b8540._.js",
+      "static/chunks/42e73_next_dist_shared_lib_d1b721a5._.js",
+      "static/chunks/42e73_next_dist_client_5ed5bd8d._.js",
+      "static/chunks/42e73_next_dist_eb6aa77d._.js",
+      "static/chunks/42e73_next_app_f34d87bb.js",
+      "static/chunks/[next]_entry_page-loader_ts_3d0df899._.js",
+      "static/chunks/42e73_react-dom_7705b11e._.js",
+      "static/chunks/42e73_ce04a1b2._.js",
+      "static/chunks/[root-of-the-server]__0916d39f._.js",
+      "static/chunks/judicial_judiciallegalway_pages__app_2da965e7._.js",
+      "static/chunks/turbopack-judicial_judiciallegalway_pages__app_058c2d07._.js"
+    ]
+  },
+  "ampFirstPages": []
+}

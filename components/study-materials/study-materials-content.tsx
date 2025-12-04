@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
+import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -11,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { ShieldCheckIcon, BookLawIcon } from "@/components/icons/legal-icons"
-import { Search, Filter, BookOpen, Lock, CheckCircle, ArrowRight, IndianRupee } from "lucide-react"
+import { Search, Filter, BookOpen, Lock, CheckCircle, ArrowRight, IndianRupee, X, TrendingUp, Star } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 
@@ -142,10 +143,22 @@ export function StudyMaterialsContent() {
   const FilterSidebar = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="font-serif font-semibold text-foreground mb-4">Categories</h3>
-        <div className="space-y-3">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-serif font-semibold text-foreground">Categories</h3>
+          {selectedCategories.length > 0 && (
+            <Badge variant="secondary" className="text-xs">
+              {selectedCategories.length} selected
+            </Badge>
+          )}
+        </div>
+        <div className="space-y-2">
           {categories.map((category) => (
-            <label key={category.id} className="flex items-center gap-3 cursor-pointer group">
+            <motion.label
+              key={category.id}
+              className="flex items-center gap-3 cursor-pointer group rounded-lg p-2 hover:bg-muted/50 transition-colors"
+              whileHover={{ x: 4 }}
+              transition={{ duration: 0.2 }}
+            >
               <Checkbox
                 checked={selectedCategories.includes(category.id)}
                 onCheckedChange={() => handleCategoryToggle(category.id)}
@@ -156,29 +169,41 @@ export function StudyMaterialsContent() {
               <Badge variant="secondary" className="text-xs">
                 {category.count}
               </Badge>
-            </label>
+            </motion.label>
           ))}
         </div>
       </div>
 
       <div className="border-t pt-6">
         <h3 className="font-serif font-semibold text-foreground mb-4">Content Type</h3>
-        <label className="flex items-center gap-3 cursor-pointer">
+        <label className="flex items-center gap-3 cursor-pointer rounded-lg p-2 hover:bg-muted/50 transition-colors">
           <Checkbox checked={showPremiumOnly} onCheckedChange={(checked) => setShowPremiumOnly(checked as boolean)} />
-          <span className="text-sm text-foreground">Premium Content Only</span>
+          <div className="flex-1">
+            <span className="text-sm font-medium text-foreground">Premium Content Only</span>
+            <p className="text-xs text-muted-foreground">DRM-protected materials</p>
+          </div>
         </label>
       </div>
 
-      <Button
-        variant="outline"
-        className="w-full bg-transparent"
-        onClick={() => {
-          setSelectedCategories([])
-          setShowPremiumOnly(false)
-        }}
-      >
-        Clear Filters
-      </Button>
+      {(selectedCategories.length > 0 || showPremiumOnly) && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+        >
+          <Button
+            variant="outline"
+            className="w-full bg-transparent gap-2"
+            onClick={() => {
+              setSelectedCategories([])
+              setShowPremiumOnly(false)
+            }}
+          >
+            <X className="h-4 w-4" />
+            Clear All Filters
+          </Button>
+        </motion.div>
+      )}
     </div>
   )
 
@@ -237,24 +262,53 @@ export function StudyMaterialsContent() {
         </div>
 
         {/* Active Filters */}
-        {selectedCategories.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {selectedCategories.map((catId) => {
-              const cat = categories.find((c) => c.id === catId)
-              return (
-                <Badge key={catId} variant="secondary" className="gap-2">
-                  {cat?.name}
-                  <button onClick={() => handleCategoryToggle(catId)} className="hover:text-destructive">
-                    ×
-                  </button>
-                </Badge>
-              )
-            })}
-          </div>
-        )}
+        <AnimatePresence>
+          {selectedCategories.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex flex-wrap gap-2 mb-6"
+            >
+              {selectedCategories.map((catId) => {
+                const cat = categories.find((c) => c.id === catId)
+                return (
+                  <motion.div
+                    key={catId}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Badge variant="secondary" className="gap-2 pr-1">
+                      {cat?.name}
+                      <button
+                        onClick={() => handleCategoryToggle(catId)}
+                        className="ml-1 rounded-full p-0.5 hover:bg-destructive/20 hover:text-destructive transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  </motion.div>
+                )
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Results Count */}
-        <p className="text-sm text-muted-foreground mb-6">Showing {sortedMaterials.length} study materials</p>
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Showing <span className="font-semibold text-foreground">{sortedMaterials.length}</span> study materials
+          </p>
+          {!loading && sortedMaterials.length > 0 && (
+            <Badge variant="outline" className="gap-1">
+              <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+              Top Rated
+            </Badge>
+          )}
+        </div>
 
         {/* Materials Grid */}
         {loading ? (
@@ -276,108 +330,157 @@ export function StudyMaterialsContent() {
             <p className="text-muted-foreground">Try adjusting your filters or search query</p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {sortedMaterials.map((material) => {
+          <motion.div
+            className="grid gap-6 md:grid-cols-2 xl:grid-cols-3"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.1
+                }
+              }
+            }}
+          >
+            {sortedMaterials.map((material, index) => {
               const progress = userProgress[material.id]
               const isPurchased = purchases.has(material.id) || !material.is_premium
               const progressPercent = progress ? Math.round((progress.current_page / progress.total_pages) * 100) : 0
 
               return (
-                <Card key={material.id} className="group overflow-hidden transition-all hover:shadow-xl">
-                  <div className="relative h-48 overflow-hidden bg-muted">
-                    <img
-                      src={
-                        material.thumbnail_url ||
-                        `/placeholder.svg?height=192&width=384&query=${encodeURIComponent(material.title)}`
-                      }
-                      alt={material.title}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <motion.div
+                  key={material.id}
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: { opacity: 1, y: 0 }
+                  }}
+                  transition={{ duration: 0.4 }}
+                  whileHover={{ y: -8 }}
+                >
+                  <Card className="group overflow-hidden transition-all hover:shadow-xl h-full flex flex-col rounded-xl">
+                    <div className="relative h-48 overflow-hidden bg-muted">
+                      <motion.img
+                        src={
+                          material.thumbnail_url ||
+                          `/placeholder.svg?height=192&width=384&query=${encodeURIComponent(material.title)}`
+                        }
+                        alt={material.title}
+                        className="h-full w-full object-cover"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
-                    {/* Badges */}
-                    <div className="absolute top-3 left-3 flex gap-2">
-                      {material.is_premium && (
-                        <Badge className="bg-accent text-accent-foreground gap-1">
-                          <Lock className="h-3 w-3" />
-                          Premium
-                        </Badge>
-                      )}
-                      <Badge variant="secondary" className="bg-primary/90 text-primary-foreground gap-1">
-                        <ShieldCheckIcon className="h-3 w-3" />
-                        DRM
-                      </Badge>
-                    </div>
-
-                    {/* Category */}
-                    <div className="absolute bottom-3 left-3">
-                      <Badge variant="outline" className="bg-white/20 backdrop-blur-sm text-white border-white/30">
-                        {categories.find((c) => c.id === material.category)?.name || material.category}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <CardContent className="p-5">
-                    <h3 className="font-serif text-lg font-semibold text-foreground line-clamp-2 mb-2">
-                      {material.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{material.description}</p>
-
-                    {/* Progress Bar (if purchased and started) */}
-                    {isPurchased && progress && (
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-muted-foreground">Progress</span>
-                          <span className="font-medium text-primary">{progressPercent}%</span>
-                        </div>
-                        <Progress value={progressPercent} className="h-2" />
-                      </div>
-                    )}
-
-                    {/* Pricing */}
-                    <div className="flex items-center justify-between">
-                      {material.is_premium ? (
-                        isPurchased ? (
-                          <div className="flex items-center gap-2 text-green-600">
-                            <CheckCircle className="h-4 w-4" />
-                            <span className="text-sm font-medium">Purchased</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <IndianRupee className="h-4 w-4 text-foreground" />
-                            <span className="text-xl font-bold text-foreground">{material.price}</span>
-                          </div>
-                        )
-                      ) : (
-                        <Badge variant="secondary" className="bg-green-500/10 text-green-600">
-                          Free Access
-                        </Badge>
-                      )}
-                      <span className="text-sm text-muted-foreground">{material.total_pages} pages</span>
-                    </div>
-                  </CardContent>
-
-                  <CardFooter className="p-5 pt-0">
-                    <Button className="w-full gap-2" variant={isPurchased ? "default" : "outline"} asChild>
-                      <Link href={isPurchased ? `/reader/${material.id}` : `/study-materials/${material.id}`}>
-                        {isPurchased ? (
-                          <>
-                            <BookOpen className="h-4 w-4" />
-                            {progress ? "Continue Reading" : "Start Reading"}
-                          </>
-                        ) : (
-                          <>
-                            View Details
-                            <ArrowRight className="h-4 w-4" />
-                          </>
+                      {/* Badges */}
+                      <div className="absolute top-3 left-3 flex gap-2">
+                        {material.is_premium && (
+                          <Badge className="bg-accent text-accent-foreground gap-1 shadow-lg">
+                            <Lock className="h-3 w-3" />
+                            Premium
+                          </Badge>
                         )}
-                      </Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
+                        <Badge variant="secondary" className="bg-primary/90 text-primary-foreground gap-1 shadow-lg">
+                          <ShieldCheckIcon className="h-3 w-3" />
+                          DRM
+                        </Badge>
+                      </div>
+
+                      {/* Category */}
+                      <div className="absolute bottom-3 left-3">
+                        <Badge variant="outline" className="bg-white/20 backdrop-blur-sm text-white border-white/30">
+                          {categories.find((c) => c.id === material.category)?.name || material.category}
+                        </Badge>
+                      </div>
+
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 bg-primary/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          whileHover={{ scale: 1 }}
+                          className="text-white text-center px-4"
+                        >
+                          <BookOpen className="h-8 w-8 mx-auto mb-2" />
+                          <p className="text-sm font-medium">Quick Preview</p>
+                        </motion.div>
+                      </div>
+                    </div>
+
+                    <CardContent className="p-5 flex-1 flex flex-col">
+                      <h3 className="font-serif text-lg font-semibold text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                        {material.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1">{material.description}</p>
+
+                      {/* Progress Bar (if purchased and started) */}
+                      {isPurchased && progress && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          className="mb-4"
+                        >
+                          <div className="flex items-center justify-between text-sm mb-2">
+                            <span className="text-muted-foreground">Your Progress</span>
+                            <span className="font-semibold text-primary">{progressPercent}%</span>
+                          </div>
+                          <Progress value={progressPercent} className="h-2" />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Page {progress.current_page} of {progress.total_pages}
+                          </p>
+                        </motion.div>
+                      )}
+
+                      {/* Pricing */}
+                      <div className="flex items-center justify-between pt-4 border-t">
+                        {material.is_premium ? (
+                          isPurchased ? (
+                            <div className="flex items-center gap-2 text-green-600">
+                              <CheckCircle className="h-4 w-4" />
+                              <span className="text-sm font-medium">Purchased</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <IndianRupee className="h-5 w-5 text-foreground" />
+                              <span className="text-2xl font-bold text-foreground">{material.price}</span>
+                            </div>
+                          )
+                        ) : (
+                          <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
+                            Free Access
+                          </Badge>
+                        )}
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <BookOpen className="h-4 w-4" />
+                          <span>{material.total_pages} pages</span>
+                        </div>
+                      </div>
+                    </CardContent>
+
+                    <CardFooter className="p-5 pt-0">
+                      <motion.div className="w-full" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Button className="w-full gap-2" variant={isPurchased ? "default" : "outline"} asChild>
+                          <Link href={isPurchased ? `/reader/${material.id}` : `/study-materials/${material.id}`}>
+                            {isPurchased ? (
+                              <>
+                                <BookOpen className="h-4 w-4" />
+                                {progress ? "Continue Reading" : "Start Reading"}
+                              </>
+                            ) : (
+                              <>
+                                View Details
+                                <ArrowRight className="h-4 w-4" />
+                              </>
+                            )}
+                          </Link>
+                        </Button>
+                      </motion.div>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
               )
             })}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

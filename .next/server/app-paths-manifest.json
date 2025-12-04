@@ -1,0 +1,15 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/auth/signup/page": "app/auth/signup/page.js",
+  "/court-tracker/page": "app/court-tracker/page.js",
+  "/page": "app/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/reader/[id]/page": "app/reader/[id]/page.js",
+  "/store/[id]/page": "app/store/[id]/page.js",
+  "/store/page": "app/store/page.js",
+  "/study-materials/[id]/page": "app/study-materials/[id]/page.js",
+  "/study-materials/page": "app/study-materials/page.js"
+}

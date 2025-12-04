@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +22,8 @@ import {
   FileText,
   AlertCircle,
   CheckCircle,
+  TrendingUp,
+  Bell,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
@@ -202,68 +205,88 @@ export function CourtTrackerContent() {
   }
 
   const CaseCard = ({ case: c }: { case: CourtCase }) => (
-    <Card className="group hover:shadow-lg transition-all">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Badge className={getStatusBadge(c.status)}>{c.status}</Badge>
-              {c.status === "Hearing Today" && (
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-destructive" />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      whileHover={{ y: -4 }}
+    >
+      <Card className="group hover:shadow-xl transition-all h-full rounded-xl border-l-4" style={{
+        borderLeftColor: c.status === "Hearing Today" ? "hsl(var(--destructive))" : 
+                        c.status === "Disposed" ? "hsl(var(--green-500))" : 
+                        "hsl(var(--border))"
+      }}>
+        <CardContent className="p-5">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className={getStatusBadge(c.status)}>{c.status}</Badge>
+                {c.status === "Hearing Today" && (
+                  <motion.span
+                    className="relative flex h-2 w-2"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-destructive" />
+                  </motion.span>
+                )}
+              </div>
+              <h3 className="font-serif font-semibold text-foreground group-hover:text-primary transition-colors">
+                {c.case_number}
+              </h3>
+            </div>
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => toggleSaveCase(c.id)}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                {savedCases.has(c.id) ? (
+                  <BookmarkCheck className="h-5 w-5 text-accent" />
+                ) : (
+                  <Bookmark className="h-5 w-5" />
+                )}
+              </Button>
+            </motion.div>
+          </div>
+
+          <p className="text-sm text-foreground font-medium mb-4 line-clamp-2">{c.case_title}</p>
+
+          <div className="space-y-2.5 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+              <CourtBuildingIcon className="h-4 w-4 flex-shrink-0 text-accent" />
+              <span className="truncate">{c.court_name}</span>
+            </div>
+            <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+              <GavelIcon className="h-4 w-4 flex-shrink-0 text-primary" />
+              <span className="truncate">{c.judge_name}</span>
+            </div>
+            {c.next_hearing_date && c.status !== "Disposed" && (
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-accent/5">
+                <Calendar className="h-4 w-4 flex-shrink-0 text-accent" />
+                <span className="font-medium">
+                  Next:{" "}
+                  {new Date(c.next_hearing_date).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
                 </span>
-              )}
-            </div>
-            <h3 className="font-serif font-semibold text-foreground">{c.case_number}</h3>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => toggleSaveCase(c.id)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            {savedCases.has(c.id) ? (
-              <BookmarkCheck className="h-5 w-5 text-accent" />
-            ) : (
-              <Bookmark className="h-5 w-5" />
+              </div>
             )}
-          </Button>
-        </div>
-
-        <p className="text-sm text-foreground font-medium mb-3 line-clamp-2">{c.case_title}</p>
-
-        <div className="space-y-2 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <CourtBuildingIcon className="h-4 w-4 flex-shrink-0" />
-            <span className="truncate">{c.court_name}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <GavelIcon className="h-4 w-4 flex-shrink-0" />
-            <span className="truncate">{c.judge_name}</span>
-          </div>
-          {c.next_hearing_date && c.status !== "Disposed" && (
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 flex-shrink-0" />
-              <span>
-                Next:{" "}
-                {new Date(c.next_hearing_date).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </span>
-            </div>
-          )}
-        </div>
 
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="w-full mt-4 bg-transparent" onClick={() => setSelectedCase(c)}>
-              View Details
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <Dialog>
+            <DialogTrigger asChild>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button variant="outline" className="w-full mt-4 bg-transparent" onClick={() => setSelectedCase(c)}>
+                  View Details
+                </Button>
+              </motion.div>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-serif text-xl">{c.case_number}</DialogTitle>
             </DialogHeader>
@@ -371,117 +394,168 @@ export function CourtTrackerContent() {
               </Button>
             </div>
           </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
+          </Dialog>
+        </CardContent>
+      </Card>
+    </motion.div>
   )
 
   return (
     <div className="container mx-auto px-4 py-8 lg:px-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="font-serif text-3xl font-bold text-foreground md:text-4xl">Court Case Tracker</h1>
-        <p className="mt-2 text-muted-foreground">
-          Search and track court cases across Supreme Court, High Courts, and District Courts
-        </p>
-      </div>
-
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4 mb-8">
+      <motion.div
+        className="grid gap-4 md:grid-cols-4 mb-8"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: { opacity: 0 },
+          visible: {
+            opacity: 1,
+            transition: {
+              staggerChildren: 0.1
+            }
+          }
+        }}
+      >
         {[
-          { label: "Total Cases", value: cases.length.toString(), icon: FileText, color: "text-primary" },
+          { label: "Total Cases", value: cases.length.toString(), icon: FileText, color: "text-primary", bgColor: "bg-primary/10" },
           {
             label: "Hearing Today",
             value: cases.filter((c) => c.status === "Hearing Today").length.toString(),
             icon: AlertCircle,
             color: "text-destructive",
+            bgColor: "bg-destructive/10"
           },
           {
             label: "Pending",
             value: cases.filter((c) => c.status === "Pending").length.toString(),
             icon: Clock,
             color: "text-amber-500",
+            bgColor: "bg-amber-500/10"
           },
           {
             label: "Disposed",
             value: cases.filter((c) => c.status === "Disposed").length.toString(),
             icon: CheckCircle,
             color: "text-green-500",
+            bgColor: "bg-green-500/10"
           },
         ].map((stat, i) => (
-          <Card key={i}>
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className={`p-3 rounded-lg bg-muted ${stat.color}`}>
-                <stat.icon className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <motion.div
+            key={i}
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: { opacity: 1, y: 0 }
+            }}
+            whileHover={{ y: -4, scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Card className="hover:shadow-lg transition-shadow rounded-xl">
+              <CardContent className="p-5 flex items-center gap-4">
+                <motion.div
+                  className={`p-3 rounded-xl ${stat.bgColor} ${stat.color}`}
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <stat.icon className="h-6 w-6" />
+                </motion.div>
+                <div>
+                  <motion.p
+                    className="text-3xl font-bold text-foreground"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: i * 0.1 + 0.2, type: "spring" }}
+                  >
+                    {stat.value}
+                  </motion.p>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Search and Filters */}
-      <Card className="mb-8">
-        <CardContent className="p-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by case number, party name, or advocate..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Select value={selectedState} onValueChange={setSelectedState}>
-                <SelectTrigger className="w-[150px]">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {states.map((state) => (
-                    <SelectItem key={state} value={state}>
-                      {state}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <Card className="mb-8 rounded-xl">
+          <CardContent className="p-6">
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by case number, party name, or advocate..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Select value={selectedState} onValueChange={setSelectedState}>
+                  <SelectTrigger className="w-[150px]">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {states.map((state) => (
+                      <SelectItem key={state} value={state}>
+                        {state}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Select value={selectedCourtType} onValueChange={setSelectedCourtType}>
-                <SelectTrigger className="w-[150px]">
-                  <CourtBuildingIcon className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {courtTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Select value={selectedCourtType} onValueChange={setSelectedCourtType}>
+                  <SelectTrigger className="w-[150px]">
+                    <CourtBuildingIcon className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courtTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-[150px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {statuses.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                  <SelectTrigger className="w-[150px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statuses.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            
+            {/* Active Filters Summary */}
+            {(selectedState !== "All States" || selectedCourtType !== "All Courts" || selectedStatus !== "All Status") && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="mt-4 pt-4 border-t flex items-center gap-2 text-sm text-muted-foreground"
+              >
+                <TrendingUp className="h-4 w-4" />
+                <span>Showing <span className="font-semibold text-foreground">{filteredCases.length}</span> results</span>
+                {selectedState !== "All States" && <Badge variant="secondary">{selectedState}</Badge>}
+                {selectedCourtType !== "All Courts" && <Badge variant="secondary">{selectedCourtType}</Badge>}
+                {selectedStatus !== "All Status" && <Badge variant="secondary">{selectedStatus}</Badge>}
+              </motion.div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Results */}
       <Tabs defaultValue="all" className="space-y-6">

@@ -124,9 +124,9 @@ export function HeroSection() {
                 transition={{ duration: 0.2 }}
               >
                 <Button size="lg" className="gap-2 px-8" asChild>
-                  <Link href="/study-materials">
+                  <Link href="/case-files">
                     <BookOpen className="h-5 w-5" />
-                    Explore Study Material
+                    Explore Case Files
                   </Link>
                 </Button>
               </motion.div>

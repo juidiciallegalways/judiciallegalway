@@ -203,7 +203,7 @@ export function DRMReader({ material, userEmail, initialProgress }: DRMReaderPro
         )}
       >
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/study-materials")}>
+          <Button variant="ghost" size="icon" onClick={() => router.push("/case-files")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="hidden sm:block">

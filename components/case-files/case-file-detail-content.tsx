@@ -19,24 +19,31 @@ import {
   ShoppingCart,
   Play,
   Users,
+  Scale,
+  Calendar,
+  Building2,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
-interface Material {
+interface CaseFile {
   id: string
   title: string
   description: string
+  case_number: string
+  court_name: string
   category: string
   subcategory: string
+  year: number
   thumbnail_url: string
   is_premium: boolean
   price: number
   total_pages: number
+  tags: string[]
 }
 
-export function MaterialDetailContent({ material }: { material: Material }) {
+export function CaseFileDetailContent({ caseFile }: { caseFile: CaseFile }) {
   const router = useRouter()
-  const [isPurchased, setIsPurchased] = useState(!material.is_premium)
+  const [isPurchased, setIsPurchased] = useState(!caseFile.is_premium)
   const [isLoading, setIsLoading] = useState(false)
   const [user, setUser] = useState<{ id: string; email: string } | null>(null)
 
@@ -54,8 +61,8 @@ export function MaterialDetailContent({ material }: { material: Material }) {
           .from("purchases")
           .select("id")
           .eq("user_id", authUser.id)
-          .eq("item_id", material.id)
-          .eq("item_type", "study_material")
+          .eq("item_id", caseFile.id)
+          .eq("item_type", "case_file")
           .eq("payment_status", "completed")
           .single()
 
@@ -65,7 +72,7 @@ export function MaterialDetailContent({ material }: { material: Material }) {
       }
     }
     checkPurchase()
-  }, [material.id])
+  }, [caseFile.id])
 
   const handlePurchase = async () => {
     if (!user) {
@@ -79,9 +86,9 @@ export function MaterialDetailContent({ material }: { material: Material }) {
 
     const { error } = await supabase.from("purchases").insert({
       user_id: user.id,
-      item_id: material.id,
-      item_type: "study_material",
-      amount: material.price,
+      item_id: caseFile.id,
+      item_type: "case_file",
+      amount: caseFile.price,
       payment_status: "completed",
       payment_id: `demo_${Date.now()}`,
     })
@@ -92,22 +99,20 @@ export function MaterialDetailContent({ material }: { material: Material }) {
     setIsLoading(false)
   }
 
-  const tableOfContents = [
-    { title: "Introduction", pages: "1-10" },
-    { title: "Chapter 1: Fundamentals", pages: "11-45" },
-    { title: "Chapter 2: Key Concepts", pages: "46-90" },
-    { title: "Chapter 3: Case Studies", pages: "91-140" },
-    { title: "Chapter 4: Practice Questions", pages: "141-180" },
-    { title: "Summary & Revision Notes", pages: "181-200" },
+  const caseDetails = [
+    { label: "Case Number", value: caseFile.case_number, icon: FileText },
+    { label: "Court", value: caseFile.court_name, icon: Building2 },
+    { label: "Year", value: caseFile.year?.toString(), icon: Calendar },
+    { label: "Category", value: caseFile.category, icon: Scale },
   ]
 
   return (
     <div className="container mx-auto px-4 py-8 lg:px-8">
       {/* Back Button */}
       <Button variant="ghost" className="mb-6 gap-2" asChild>
-        <Link href="/study-materials">
+        <Link href="/case-files">
           <ArrowLeft className="h-4 w-4" />
-          Back to Library
+          Back to Case Files
         </Link>
       </Button>
 
@@ -118,16 +123,16 @@ export function MaterialDetailContent({ material }: { material: Material }) {
           <div className="relative rounded-2xl overflow-hidden mb-8">
             <img
               src={
-                material.thumbnail_url ||
-                `/placeholder.svg?height=400&width=800&query=${encodeURIComponent(material.title)}`
+                caseFile.thumbnail_url ||
+                `/placeholder.svg?height=400&width=800&query=${encodeURIComponent(caseFile.title)}`
               }
-              alt={material.title}
+              alt={caseFile.title}
               className="w-full h-64 md:h-80 object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-6">
               <div className="flex flex-wrap gap-2 mb-4">
-                {material.is_premium && (
+                {caseFile.is_premium && (
                   <Badge className="bg-accent text-accent-foreground gap-1">
                     <Lock className="h-3 w-3" />
                     Premium
@@ -137,9 +142,14 @@ export function MaterialDetailContent({ material }: { material: Material }) {
                   <ShieldCheckIcon className="h-3 w-3" />
                   DRM Protected
                 </Badge>
+                {caseFile.case_number && (
+                  <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 font-mono">
+                    {caseFile.case_number}
+                  </Badge>
+                )}
               </div>
-              <h1 className="font-serif text-2xl md:text-3xl font-bold text-white mb-2">{material.title}</h1>
-              <p className="text-white/80 line-clamp-2">{material.description}</p>
+              <h1 className="font-serif text-2xl md:text-3xl font-bold text-white mb-2">{caseFile.title}</h1>
+              <p className="text-white/80 line-clamp-2">{caseFile.description}</p>
             </div>
           </div>
 
@@ -147,39 +157,39 @@ export function MaterialDetailContent({ material }: { material: Material }) {
           <Tabs defaultValue="overview" className="space-y-6">
             <TabsList className="w-full justify-start">
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="contents">Contents</TabsTrigger>
+              <TabsTrigger value="details">Case Details</TabsTrigger>
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
               <Card>
                 <CardContent className="p-6">
-                  <h2 className="font-serif text-xl font-semibold mb-4">About This Material</h2>
+                  <h2 className="font-serif text-xl font-semibold mb-4">About This Case</h2>
                   <p className="text-muted-foreground leading-relaxed">
-                    {material.description ||
-                      "Comprehensive study material covering all essential topics for judiciary exam preparation. Includes detailed explanations, case laws, and practice questions."}
+                    {caseFile.description ||
+                      "Landmark judgment with detailed analysis and legal principles. Essential reading for judiciary exam preparation and legal research."}
                   </p>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
                     <div className="text-center">
                       <FileText className="h-8 w-8 mx-auto text-primary mb-2" />
-                      <p className="text-2xl font-bold text-foreground">{material.total_pages}</p>
+                      <p className="text-2xl font-bold text-foreground">{caseFile.total_pages}</p>
                       <p className="text-sm text-muted-foreground">Pages</p>
                     </div>
                     <div className="text-center">
                       <Clock className="h-8 w-8 mx-auto text-primary mb-2" />
-                      <p className="text-2xl font-bold text-foreground">~{Math.ceil(material.total_pages / 20)}h</p>
+                      <p className="text-2xl font-bold text-foreground">~{Math.ceil(caseFile.total_pages / 15)}h</p>
                       <p className="text-sm text-muted-foreground">Reading Time</p>
                     </div>
                     <div className="text-center">
                       <Users className="h-8 w-8 mx-auto text-primary mb-2" />
-                      <p className="text-2xl font-bold text-foreground">2.5k+</p>
-                      <p className="text-sm text-muted-foreground">Students</p>
+                      <p className="text-2xl font-bold text-foreground">1.8k+</p>
+                      <p className="text-sm text-muted-foreground">Readers</p>
                     </div>
                     <div className="text-center">
                       <BookLawIcon className="h-8 w-8 mx-auto text-primary mb-2" />
-                      <p className="text-2xl font-bold text-foreground">2024</p>
-                      <p className="text-sm text-muted-foreground">Updated</p>
+                      <p className="text-2xl font-bold text-foreground">{caseFile.year}</p>
+                      <p className="text-sm text-muted-foreground">Year</p>
                     </div>
                   </div>
                 </CardContent>
@@ -190,10 +200,10 @@ export function MaterialDetailContent({ material }: { material: Material }) {
                   <h2 className="font-serif text-xl font-semibold mb-4">Key Features</h2>
                   <ul className="space-y-3">
                     {[
-                      "Comprehensive coverage of all exam topics",
-                      "Real case laws with detailed analysis",
-                      "Practice questions after each chapter",
-                      "Revision notes and summaries",
+                      "Complete judgment with detailed reasoning",
+                      "Legal principles and precedents cited",
+                      "Headnotes and case summary",
+                      "Relevant sections and statutes",
                       "Mobile-friendly reading experience",
                       "DRM-protected secure content",
                     ].map((feature, i) => (
@@ -205,28 +215,55 @@ export function MaterialDetailContent({ material }: { material: Material }) {
                   </ul>
                 </CardContent>
               </Card>
+
+              {caseFile.tags && caseFile.tags.length > 0 && (
+                <Card>
+                  <CardContent className="p-6">
+                    <h2 className="font-serif text-xl font-semibold mb-4">Tags</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {caseFile.tags.map((tag, i) => (
+                        <Badge key={i} variant="secondary">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
-            <TabsContent value="contents">
+            <TabsContent value="details">
               <Card>
                 <CardContent className="p-6">
-                  <h2 className="font-serif text-xl font-semibold mb-4">Table of Contents</h2>
-                  <div className="space-y-3">
-                    {tableOfContents.map((item, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
-                            {i + 1}
-                          </span>
-                          <span className="font-medium text-foreground">{item.title}</span>
+                  <h2 className="font-serif text-xl font-semibold mb-4">Case Information</h2>
+                  <div className="space-y-4">
+                    {caseDetails.map((detail, i) => {
+                      const Icon = detail.icon
+                      return (
+                        <div
+                          key={i}
+                          className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                        >
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                            <Icon className="h-5 w-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm text-muted-foreground">{detail.label}</p>
+                            <p className="font-medium text-foreground">{detail.value || "N/A"}</p>
+                          </div>
                         </div>
-                        <span className="text-sm text-muted-foreground">Pages {item.pages}</span>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
+
+                  {caseFile.subcategory && (
+                    <div className="mt-6 pt-6 border-t">
+                      <p className="text-sm text-muted-foreground mb-2">Subcategory</p>
+                      <Badge variant="outline" className="text-base">
+                        {caseFile.subcategory}
+                      </Badge>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -246,10 +283,10 @@ export function MaterialDetailContent({ material }: { material: Material }) {
           <Card className="sticky top-24">
             <CardContent className="p-6">
               {/* Price */}
-              {material.is_premium && !isPurchased && (
+              {caseFile.is_premium && !isPurchased && (
                 <div className="flex items-center gap-2 mb-6">
                   <IndianRupee className="h-6 w-6 text-foreground" />
-                  <span className="text-4xl font-bold text-foreground">{material.price}</span>
+                  <span className="text-4xl font-bold text-foreground">{caseFile.price}</span>
                 </div>
               )}
 
@@ -257,10 +294,10 @@ export function MaterialDetailContent({ material }: { material: Material }) {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-green-600 bg-green-50 dark:bg-green-950/30 p-3 rounded-lg">
                     <CheckCircle className="h-5 w-5" />
-                    <span className="font-medium">You have access to this material</span>
+                    <span className="font-medium">You have access to this case file</span>
                   </div>
                   <Button className="w-full gap-2" size="lg" asChild>
-                    <Link href={`/reader/${material.id}`}>
+                    <Link href={`/reader/${caseFile.id}`}>
                       <BookOpen className="h-5 w-5" />
                       Start Reading
                     </Link>

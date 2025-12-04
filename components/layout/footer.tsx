@@ -10,11 +10,11 @@ import { useState } from "react"
 
 const footerLinks = {
   study: [
-    { name: "IPC", href: "/study-materials?category=ipc" },
-    { name: "CrPC", href: "/study-materials?category=crpc" },
-    { name: "CPC", href: "/study-materials?category=cpc" },
-    { name: "Evidence Act", href: "/study-materials?category=evidence" },
-    { name: "Contract Law", href: "/study-materials?category=contracts" },
+    { name: "Constitutional Law", href: "/case-files?category=constitutional" },
+    { name: "Criminal Law", href: "/case-files?category=criminal" },
+    { name: "Civil Law", href: "/case-files?category=civil" },
+    { name: "Family Law", href: "/case-files?category=family" },
+    { name: "Corporate Law", href: "/case-files?category=corporate" },
   ],
   services: [
     { name: "Court Tracker", href: "/court-tracker" },
@@ -75,7 +75,7 @@ export function Footer() {
                 Stay Updated with Legal Insights
               </h3>
               <p className="mt-2 text-primary-foreground/80">
-                Get the latest court updates, study materials, and exam tips delivered to your inbox.
+                Get the latest court updates, case files, and exam tips delivered to your inbox.
               </p>
             </div>
             <form onSubmit={handleSubscribe} className="flex gap-2">
@@ -170,7 +170,7 @@ export function Footer() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <h3 className="font-serif font-semibold text-foreground mb-4">Study Materials</h3>
+            <h3 className="font-serif font-semibold text-foreground mb-4">Case Files</h3>
             <ul className="space-y-2.5">
               {footerLinks.study.map((link) => (
                 <li key={link.name}>

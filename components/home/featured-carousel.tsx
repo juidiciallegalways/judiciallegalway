@@ -14,22 +14,22 @@ import { useImagesLoading } from "@/hooks/use-image-loading"
 const featuredItems = [
   {
     id: 1,
-    type: "subject",
-    title: "Indian Penal Code (IPC)",
-    description: "Complete coverage of all 511 sections with case laws and examples",
+    type: "case",
+    title: "Kesavananda Bharati Case",
+    description: "Landmark judgment establishing the basic structure doctrine",
     image: "/indian-penal-code-law-book.jpg",
     badge: "Most Popular",
-    href: "/study-materials?category=ipc",
+    href: "/case-files?category=constitutional",
     icon: BookOpen,
   },
   {
     id: 2,
-    type: "subject",
-    title: "Criminal Procedure Code",
-    description: "In-depth analysis of CrPC with procedural flowcharts",
+    type: "case",
+    title: "Criminal Law Cases",
+    description: "Important judgments on IPC and CrPC with detailed analysis",
     image: "/criminal-procedure-code-legal-document.jpg",
     badge: "Exam Essential",
-    href: "/study-materials?category=crpc",
+    href: "/case-files?category=criminal",
     icon: FileText,
   },
   {
@@ -44,22 +44,22 @@ const featuredItems = [
   },
   {
     id: 4,
-    type: "subject",
-    title: "Evidence Act",
-    description: "Comprehensive guide with practical applications",
+    type: "case",
+    title: "Civil Law Judgments",
+    description: "Comprehensive collection of civil law case files",
     image: "/evidence-act-law-courtroom.jpg",
     badge: "New Content",
-    href: "/study-materials?category=evidence",
+    href: "/case-files?category=civil",
     icon: BookOpen,
   },
   {
     id: 5,
-    type: "subject",
-    title: "Civil Procedure Code",
-    description: "Civil litigation procedures simplified for exams",
+    type: "case",
+    title: "Family Law Cases",
+    description: "Important family law judgments and precedents",
     image: "/civil-procedure-code-legal-files.jpg",
     badge: "Updated 2024",
-    href: "/study-materials?category=cpc",
+    href: "/case-files?category=family",
     icon: FileText,
   },
 ]
@@ -171,9 +171,9 @@ export function FeaturedCarousel() {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="font-serif text-3xl font-bold text-foreground">Featured Subjects & Updates</h2>
+            <h2 className="font-serif text-3xl font-bold text-foreground">Featured Case Files & Updates</h2>
             <p className="mt-2 text-muted-foreground">
-              Explore our most popular study materials and latest court updates
+              Explore landmark judgments and latest court updates
             </p>
           </div>
           <div className="hidden sm:flex items-center gap-2">
@@ -249,7 +249,7 @@ export function FeaturedCarousel() {
                     <div className="flex items-center gap-2 mb-3">
                       <item.icon className="h-5 w-5 text-primary transition-transform duration-300 group-hover:scale-110" />
                       <span className="text-sm font-medium text-primary capitalize">
-                        {item.type === "update" ? "Court Update" : "Study Material"}
+                        {item.type === "update" ? "Court Update" : "Case File"}
                       </span>
                     </div>
                     <h3 className="font-serif text-xl font-semibold text-foreground mb-2">{item.title}</h3>

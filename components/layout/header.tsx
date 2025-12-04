@@ -10,13 +10,13 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { ScalesIcon } from "@/components/icons/legal-icons"
-import { Menu, Sun, Moon, ChevronDown, User, LogOut, BookOpen, Scale, ShoppingBag, Settings, Bell } from "lucide-react"
+import { Menu, Sun, Moon, ChevronDown, User, LogOut, Scale, ShoppingBag, Settings, Bell, FileText } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 const navigation = [
   { name: "Home", href: "/", icon: null },
-  { name: "Study Materials", href: "/study-materials", icon: BookOpen },
+  { name: "Case Files", href: "/case-files", icon: FileText },
   { name: "Court Tracker", href: "/court-tracker", icon: Scale },
   { name: "Book Store", href: "/store", icon: ShoppingBag },
 ]

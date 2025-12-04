@@ -5,6 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,6 +14,11 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ScalesIcon } from "@/components/icons/legal-icons"
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, CheckCircle2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+
+const GoogleSignIn = dynamic(
+  () => import('@/components/auth/GoogleSignin').then((mod) => mod.default),
+  { ssr: false }
+)
 
 export function SignupForm() {
   const router = useRouter()
@@ -211,10 +217,22 @@ export function SignupForm() {
                 </label>
               </div>
 
-              <Button type="submit" className="w-full gap-2" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Creating account..." : "Create Account"}
-                {!loading && <ArrowRight className="h-4 w-4" />}
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
+
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or
+                  </span>
+                </div>
+              </div>
+              <GoogleSignIn />
             </form>
 
             <div className="mt-6 text-center text-sm">

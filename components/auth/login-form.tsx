@@ -42,7 +42,7 @@ export function LoginForm() {
       setError(error.message)
       setLoading(false)
     } else {
-      router.push("/profile")
+      router.push("/")
       router.refresh()
     }
   }

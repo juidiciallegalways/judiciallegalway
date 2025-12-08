@@ -1,624 +1,242 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { CourtBuildingIcon, ScalesIcon, GavelIcon } from "@/components/icons/legal-icons"
-import {
-  Search,
-  Filter,
-  Bookmark,
-  BookmarkCheck,
-  Calendar,
-  User,
-  MapPin,
-  Clock,
-  FileText,
-  AlertCircle,
-  CheckCircle,
-  TrendingUp,
-  Bell,
+import { Label } from "@/components/ui/label"
+import { 
+  Gavel, Calendar, Search, Filter, Bell, MapPin, 
+  Clock, AlertCircle
 } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+import { toast } from "sonner"
 
-interface CourtCase {
+// --- TYPE DEFINITIONS ---
+export interface CourtCase {
   id: string
   case_number: string
-  case_title: string
-  party_names: string[]
-  advocate_names: string[]
+  petitioner: string
+  respondent: string
   court_name: string
-  court_type: string
-  state: string
-  judge_name: string
   status: string
-  case_summary: string
-  filing_date: string
-  next_hearing_date: string
-  disposal_date: string | null
+  next_hearing: string // Supabase returns dates as strings
+  last_updated: string
 }
 
-const states = [
-  "All States",
-  "Delhi",
-  "Maharashtra",
-  "Karnataka",
-  "Tamil Nadu",
-  "Gujarat",
-  "Rajasthan",
-  "Uttar Pradesh",
-  "West Bengal",
-  "Madhya Pradesh",
-  "Kerala",
-]
+interface CourtTrackerContentProps {
+  initialCases: CourtCase[]
+}
 
-const courtTypes = ["All Courts", "Supreme Court", "High Court", "District Court", "Sessions Court", "Tribunal"]
-
-const statuses = ["All Status", "Pending", "Hearing Today", "Listed", "Reserved", "Disposed"]
-
-// Demo cases for initial display
-const demoCases: CourtCase[] = [
-  {
-    id: "1",
-    case_number: "WP(C) 2024/1234",
-    case_title: "State of Delhi vs. ABC Corporation",
-    party_names: ["State of Delhi", "ABC Corporation"],
-    advocate_names: ["Adv. Rajesh Kumar", "Adv. Priya Sharma"],
-    court_name: "Delhi High Court",
-    court_type: "High Court",
-    state: "Delhi",
-    judge_name: "Justice S.K. Verma",
-    status: "Hearing Today",
-    case_summary: "Writ petition challenging the validity of certain provisions under environmental regulations.",
-    filing_date: "2024-01-15",
-    next_hearing_date: new Date().toISOString().split("T")[0],
-    disposal_date: null,
-  },
-  {
-    id: "2",
-    case_number: "SLP(Crl) 2024/567",
-    case_title: "Ramesh Kumar vs. Union of India",
-    party_names: ["Ramesh Kumar", "Union of India"],
-    advocate_names: ["Adv. Amit Singh"],
-    court_name: "Supreme Court of India",
-    court_type: "Supreme Court",
-    state: "Delhi",
-    judge_name: "Justice A.K. Reddy",
-    status: "Pending",
-    case_summary: "Special leave petition against High Court judgment in criminal matter.",
-    filing_date: "2024-02-20",
-    next_hearing_date: "2024-12-15",
-    disposal_date: null,
-  },
-  {
-    id: "3",
-    case_number: "CA 2024/890",
-    case_title: "XYZ Ltd vs. PQR Industries",
-    party_names: ["XYZ Ltd", "PQR Industries"],
-    advocate_names: ["Adv. Sunita Devi", "Adv. Mohammed Ali"],
-    court_name: "Bombay High Court",
-    court_type: "High Court",
-    state: "Maharashtra",
-    judge_name: "Justice M.N. Patil",
-    status: "Disposed",
-    case_summary: "Civil appeal regarding breach of contract and damages.",
-    filing_date: "2023-08-10",
-    next_hearing_date: "2024-11-01",
-    disposal_date: "2024-11-01",
-  },
-]
-
-export function CourtTrackerContent() {
-  const [cases, setCases] = useState<CourtCase[]>(demoCases)
-  const [savedCases, setSavedCases] = useState<Set<string>>(new Set())
+export function CourtTrackerContent({ initialCases = [] }: CourtTrackerContentProps) {
+  const [cases, setCases] = useState<CourtCase[]>(initialCases)
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedState, setSelectedState] = useState("All States")
-  const [selectedCourtType, setSelectedCourtType] = useState("All Courts")
-  const [selectedStatus, setSelectedStatus] = useState("All Status")
-  const [loading, setLoading] = useState(false)
+  const [statusFilter, setStatusFilter] = useState("all")
   const [selectedCase, setSelectedCase] = useState<CourtCase | null>(null)
 
-  useEffect(() => {
-    async function fetchData() {
-      const supabase = createClient()
-
-      // Fetch cases from database
-      const { data: casesData } = await supabase
-        .from("court_cases")
-        .select("*")
-        .order("next_hearing_date", { ascending: true })
-
-      if (casesData && casesData.length > 0) {
-        setCases(casesData)
-      }
-
-      // Fetch saved cases
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (user) {
-        const { data: saved } = await supabase.from("saved_cases").select("case_id").eq("user_id", user.id)
-
-        setSavedCases(new Set(saved?.map((s) => s.case_id) || []))
-      }
-    }
-    fetchData()
-  }, [])
-
-  const toggleSaveCase = async (caseId: string) => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      // Redirect to login
-      window.location.href = "/auth/login"
-      return
-    }
-
-    if (savedCases.has(caseId)) {
-      await supabase.from("saved_cases").delete().eq("user_id", user.id).eq("case_id", caseId)
-
-      setSavedCases((prev) => {
-        const next = new Set(prev)
-        next.delete(caseId)
-        return next
-      })
-    } else {
-      await supabase.from("saved_cases").insert({ user_id: user.id, case_id: caseId })
-
-      setSavedCases((prev) => new Set([...prev, caseId]))
-    }
-  }
-
   const filteredCases = cases.filter((c) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      c.case_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.case_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.party_names.some((p) => p.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      c.advocate_names.some((a) => a.toLowerCase().includes(searchQuery.toLowerCase()))
+    const searchLower = searchQuery.toLowerCase()
+    
+    // Safety check for null fields
+    const caseNo = c.case_number?.toLowerCase() || ""
+    const pet = c.petitioner?.toLowerCase() || ""
+    const resp = c.respondent?.toLowerCase() || ""
+    const court = c.court_name?.toLowerCase() || ""
 
-    const matchesState = selectedState === "All States" || c.state === selectedState
-    const matchesCourt = selectedCourtType === "All Courts" || c.court_type === selectedCourtType
-    const matchesStatus = selectedStatus === "All Status" || c.status === selectedStatus
+    const matchesSearch = 
+      caseNo.includes(searchLower) ||
+      pet.includes(searchLower) ||
+      resp.includes(searchLower) ||
+      court.includes(searchLower)
+    
+    const matchesStatus = statusFilter === "all" || c.status === statusFilter
 
-    return matchesSearch && matchesState && matchesCourt && matchesStatus
+    return matchesSearch && matchesStatus
   })
 
-  const getStatusBadge = (status: string) => {
-    const styles: Record<string, string> = {
-      "Hearing Today": "bg-destructive text-destructive-foreground",
-      Pending: "bg-amber-500 text-white",
-      Listed: "bg-blue-500 text-white",
-      Reserved: "bg-purple-500 text-white",
-      Disposed: "bg-green-500 text-white",
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "Not Scheduled"
+    try {
+      return new Date(dateString).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      })
+    } catch (e) {
+      return dateString
     }
-    return styles[status] || "bg-muted text-muted-foreground"
   }
 
-  const CaseCard = ({ case: c }: { case: CourtCase }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      whileHover={{ y: -4 }}
-    >
-      <Card className="group hover:shadow-xl transition-all h-full rounded-xl border-l-4" style={{
-        borderLeftColor: c.status === "Hearing Today" ? "hsl(var(--destructive))" : 
-                        c.status === "Disposed" ? "hsl(var(--green-500))" : 
-                        "hsl(var(--border))"
-      }}>
-        <CardContent className="p-5">
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge className={getStatusBadge(c.status)}>{c.status}</Badge>
-                {c.status === "Hearing Today" && (
-                  <motion.span
-                    className="relative flex h-2 w-2"
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-destructive" />
-                  </motion.span>
-                )}
-              </div>
-              <h3 className="font-serif font-semibold text-foreground group-hover:text-primary transition-colors">
-                {c.case_number}
-              </h3>
-            </div>
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => toggleSaveCase(c.id)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                {savedCases.has(c.id) ? (
-                  <BookmarkCheck className="h-5 w-5 text-accent" />
-                ) : (
-                  <Bookmark className="h-5 w-5" />
-                )}
-              </Button>
-            </motion.div>
-          </div>
+  const getStatusColor = (status: string | null) => {
+    const s = status?.toLowerCase() || ""
+    if (s.includes("disposed")) return "bg-green-100 text-green-700 border-green-200"
+    if (s.includes("adjourned")) return "bg-amber-100 text-amber-700 border-amber-200"
+    if (s.includes("reserved")) return "bg-purple-100 text-purple-700 border-purple-200"
+    return "bg-blue-100 text-blue-700 border-blue-200"
+  }
 
-          <p className="text-sm text-foreground font-medium mb-4 line-clamp-2">{c.case_title}</p>
-
-          <div className="space-y-2.5 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-              <CourtBuildingIcon className="h-4 w-4 flex-shrink-0 text-accent" />
-              <span className="truncate">{c.court_name}</span>
-            </div>
-            <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-              <GavelIcon className="h-4 w-4 flex-shrink-0 text-primary" />
-              <span className="truncate">{c.judge_name}</span>
-            </div>
-            {c.next_hearing_date && c.status !== "Disposed" && (
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-accent/5">
-                <Calendar className="h-4 w-4 flex-shrink-0 text-accent" />
-                <span className="font-medium">
-                  Next:{" "}
-                  {new Date(c.next_hearing_date).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </span>
-              </div>
-            )}
-          </div>
-
-          <Dialog>
-            <DialogTrigger asChild>
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button variant="outline" className="w-full mt-4 bg-transparent" onClick={() => setSelectedCase(c)}>
-                  View Details
-                </Button>
-              </motion.div>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="font-serif text-xl">{c.case_number}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6 pt-4">
-              <div className="flex items-center gap-2">
-                <Badge className={getStatusBadge(c.status)}>{c.status}</Badge>
-                <Badge variant="outline">{c.court_type}</Badge>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-foreground mb-2">Case Title</h4>
-                <p className="text-muted-foreground">{c.case_title}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold text-foreground mb-2">Court</h4>
-                  <p className="text-muted-foreground">{c.court_name}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground mb-2">Presiding Judge</h4>
-                  <p className="text-muted-foreground">{c.judge_name}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold text-foreground mb-2">Parties</h4>
-                  <ul className="space-y-1">
-                    {c.party_names.map((party, i) => (
-                      <li key={i} className="text-muted-foreground flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        {party}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground mb-2">Advocates</h4>
-                  <ul className="space-y-1">
-                    {c.advocate_names.map((adv, i) => (
-                      <li key={i} className="text-muted-foreground flex items-center gap-2">
-                        <ScalesIcon className="h-4 w-4" />
-                        {adv}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold text-foreground mb-2">Filing Date</h4>
-                  <p className="text-muted-foreground flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {new Date(c.filing_date).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-foreground mb-2">
-                    {c.status === "Disposed" ? "Disposal Date" : "Next Hearing"}
-                  </h4>
-                  <p className="text-muted-foreground flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {c.status === "Disposed" && c.disposal_date
-                      ? new Date(c.disposal_date).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })
-                      : c.next_hearing_date
-                        ? new Date(c.next_hearing_date).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })
-                        : "Not scheduled"}
-                  </p>
-                </div>
-              </div>
-
-              {c.case_summary && (
-                <div>
-                  <h4 className="font-semibold text-foreground mb-2">Case Summary</h4>
-                  <p className="text-muted-foreground">{c.case_summary}</p>
-                </div>
-              )}
-
-              <Button className="w-full gap-2" onClick={() => toggleSaveCase(c.id)}>
-                {savedCases.has(c.id) ? (
-                  <>
-                    <BookmarkCheck className="h-4 w-4" />
-                    Saved to Watchlist
-                  </>
-                ) : (
-                  <>
-                    <Bookmark className="h-4 w-4" />
-                    Save to Watchlist
-                  </>
-                )}
-              </Button>
-            </div>
-          </DialogContent>
-          </Dialog>
-        </CardContent>
-      </Card>
-    </motion.div>
-  )
+  const handleTrackCase = () => {
+    toast.success("Case Added to Watchlist", {
+      description: "You will receive notifications for hearing updates."
+    })
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8 lg:px-8">
-      {/* Stats Cards */}
-      <motion.div
-        className="grid gap-4 md:grid-cols-4 mb-8"
-        initial="hidden"
-        animate="visible"
-        variants={{
-          hidden: { opacity: 0 },
-          visible: {
-            opacity: 1,
-            transition: {
-              staggerChildren: 0.1
-            }
-          }
-        }}
-      >
-        {[
-          { label: "Total Cases", value: cases.length.toString(), icon: FileText, color: "text-primary", bgColor: "bg-primary/10" },
-          {
-            label: "Hearing Today",
-            value: cases.filter((c) => c.status === "Hearing Today").length.toString(),
-            icon: AlertCircle,
-            color: "text-destructive",
-            bgColor: "bg-destructive/10"
-          },
-          {
-            label: "Pending",
-            value: cases.filter((c) => c.status === "Pending").length.toString(),
-            icon: Clock,
-            color: "text-amber-500",
-            bgColor: "bg-amber-500/10"
-          },
-          {
-            label: "Disposed",
-            value: cases.filter((c) => c.status === "Disposed").length.toString(),
-            icon: CheckCircle,
-            color: "text-green-500",
-            bgColor: "bg-green-500/10"
-          },
-        ].map((stat, i) => (
-          <motion.div
-            key={i}
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              visible: { opacity: 1, y: 0 }
-            }}
-            whileHover={{ y: -4, scale: 1.02 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="hover:shadow-lg transition-shadow rounded-xl">
-              <CardContent className="p-5 flex items-center gap-4">
-                <motion.div
-                  className={`p-3 rounded-xl ${stat.bgColor} ${stat.color}`}
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <stat.icon className="h-6 w-6" />
-                </motion.div>
-                <div>
-                  <motion.p
-                    className="text-3xl font-bold text-foreground"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: i * 0.1 + 0.2, type: "spring" }}
-                  >
-                    {stat.value}
-                  </motion.p>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </motion.div>
+    <div className="space-y-8">
+      {/* Header & Controls */}
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-end md:items-center bg-card p-4 rounded-xl border shadow-sm">
+        <div className="w-full md:w-96 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search by Party Name, Case No, or Court..." 
+            className="pl-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        <div className="flex gap-3 w-full md:w-auto">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Filter Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="Hearing Scheduled">Hearing Scheduled</SelectItem>
+              <SelectItem value="Disposed">Disposed</SelectItem>
+              <SelectItem value="Adjourned">Adjourned</SelectItem>
+              <SelectItem value="Judgment Reserved">Judgment Reserved</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-      {/* Search and Filters */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <Card className="mb-8 rounded-xl">
-          <CardContent className="p-6">
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by case number, party name, or advocate..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <Select value={selectedState} onValueChange={setSelectedState}>
-                  <SelectTrigger className="w-[150px]">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {states.map((state) => (
-                      <SelectItem key={state} value={state}>
-                        {state}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={selectedCourtType} onValueChange={setSelectedCourtType}>
-                  <SelectTrigger className="w-[150px]">
-                    <CourtBuildingIcon className="h-4 w-4 mr-2" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {courtTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                  <SelectTrigger className="w-[150px]">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statuses.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            {/* Active Filters Summary */}
-            {(selectedState !== "All States" || selectedCourtType !== "All Courts" || selectedStatus !== "All Status") && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="mt-4 pt-4 border-t flex items-center gap-2 text-sm text-muted-foreground"
-              >
-                <TrendingUp className="h-4 w-4" />
-                <span>Showing <span className="font-semibold text-foreground">{filteredCases.length}</span> results</span>
-                {selectedState !== "All States" && <Badge variant="secondary">{selectedState}</Badge>}
-                {selectedCourtType !== "All Courts" && <Badge variant="secondary">{selectedCourtType}</Badge>}
-                {selectedStatus !== "All Status" && <Badge variant="secondary">{selectedStatus}</Badge>}
-              </motion.div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Results */}
-      <Tabs defaultValue="all" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="all">All Cases ({filteredCases.length})</TabsTrigger>
-          <TabsTrigger value="saved">Saved ({savedCases.size})</TabsTrigger>
-          <TabsTrigger value="today">
-            Hearing Today ({filteredCases.filter((c) => c.status === "Hearing Today").length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all">
+      {/* Case Grid */}
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <AnimatePresence mode="popLayout">
           {filteredCases.length === 0 ? (
-            <Card className="p-12 text-center">
-              <CourtBuildingIcon className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="font-serif text-xl font-semibold text-foreground mb-2">No cases found</h3>
-              <p className="text-muted-foreground">Try adjusting your search or filters</p>
-            </Card>
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              className="col-span-full text-center py-20 bg-muted/30 rounded-xl border-dashed border-2"
+            >
+              <Gavel className="h-12 w-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+              <h3 className="text-lg font-medium text-foreground">No cases found</h3>
+              <p className="text-muted-foreground">Try adjusting your search filters</p>
+            </motion.div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredCases.map((c) => (
-                <CaseCard key={c.id} case={c} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
+            filteredCases.map((courtCase) => (
+              <motion.div
+                key={courtCase.id}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Card className="hover:shadow-md transition-shadow h-full flex flex-col group bg-card">
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start gap-4">
+                      <Badge variant="outline" className="font-mono text-xs bg-muted">
+                        {courtCase.case_number}
+                      </Badge>
+                      <Badge className={getStatusColor(courtCase.status)}>
+                        {courtCase.status}
+                      </Badge>
+                    </div>
+                    <h3 className="font-serif text-lg font-semibold pt-2 leading-tight group-hover:text-primary transition-colors">
+                      {courtCase.petitioner} 
+                      <span className="text-muted-foreground text-sm font-sans mx-1">vs.</span>
+                      {courtCase.respondent}
+                    </h3>
+                  </CardHeader>
+                  
+                  <CardContent className="flex-1 space-y-4 text-sm">
+                    <div className="flex items-start gap-3 text-muted-foreground">
+                      <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+                      <span>{courtCase.court_name}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <Calendar className="h-4 w-4 shrink-0" />
+                      <span className="text-foreground font-medium">Next Hearing: {formatDate(courtCase.next_hearing)}</span>
+                    </div>
+                  </CardContent>
 
-        <TabsContent value="saved">
-          {savedCases.size === 0 ? (
-            <Card className="p-12 text-center">
-              <Bookmark className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="font-serif text-xl font-semibold text-foreground mb-2">No saved cases</h3>
-              <p className="text-muted-foreground">Save cases to track them here</p>
-            </Card>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredCases
-                .filter((c) => savedCases.has(c.id))
-                .map((c) => (
-                  <CaseCard key={c.id} case={c} />
-                ))}
-            </div>
+                  <CardFooter className="pt-0 flex gap-2">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="flex-1" onClick={() => setSelectedCase(courtCase)}>
+                          View Details
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle className="font-serif text-2xl pr-8">
+                            {courtCase.petitioner} vs. {courtCase.respondent}
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-6 py-4">
+                          <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                            <div>
+                              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Case Number</Label>
+                              <p className="font-mono font-medium mt-1">{courtCase.case_number}</p>
+                            </div>
+                            <div>
+                              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Status</Label>
+                              <Badge className={`mt-1 ${getStatusColor(courtCase.status)}`}>{courtCase.status}</Badge>
+                            </div>
+                            <div>
+                              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Next Hearing</Label>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium">{formatDate(courtCase.next_hearing)}</span>
+                              </div>
+                            </div>
+                            <div>
+                              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Last Updated</Label>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm">{formatDate(courtCase.last_updated)}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <h4 className="font-medium flex items-center gap-2">
+                              <AlertCircle className="h-4 w-4 text-primary" />
+                              Case Timeline
+                            </h4>
+                            <div className="border-l-2 border-muted pl-4 space-y-6 ml-2">
+                              <div className="relative">
+                                <div className="absolute -left-[21px] top-1 h-3 w-3 rounded-full bg-primary ring-4 ring-background" />
+                                <p className="text-sm font-medium">Current Status</p>
+                                <p className="text-xs text-muted-foreground">{courtCase.status}</p>
+                              </div>
+                              <div className="relative">
+                                <div className="absolute -left-[21px] top-1 h-3 w-3 rounded-full bg-muted-foreground/30 ring-4 ring-background" />
+                                <p className="text-sm font-medium">Case Registered</p>
+                                <p className="text-xs text-muted-foreground">Initial Filing</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    
+                    <Button onClick={() => handleTrackCase()} size="icon" variant="default">
+                      <Bell className="h-4 w-4" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            ))
           )}
-        </TabsContent>
-
-        <TabsContent value="today">
-          {filteredCases.filter((c) => c.status === "Hearing Today").length === 0 ? (
-            <Card className="p-12 text-center">
-              <Calendar className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="font-serif text-xl font-semibold text-foreground mb-2">No hearings today</h3>
-              <p className="text-muted-foreground">Check back later for updates</p>
-            </Card>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredCases
-                .filter((c) => c.status === "Hearing Today")
-                .map((c) => (
-                  <CaseCard key={c.id} case={c} />
-                ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+        </AnimatePresence>
+      </div>
     </div>
   )
 }

@@ -4,7 +4,18 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    // REMOVED: unoptimized: true
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      // Add your Supabase storage domain if you use it for uploads
+      {
+        protocol: 'https',
+        hostname: 'your-project-id.supabase.co',
+      },
+    ],
   },
 }
 

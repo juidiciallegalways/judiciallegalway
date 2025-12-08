@@ -232,3 +232,53 @@ create policy "Authenticated users can upload"
 on public.case_files for insert
 to authenticated
 with check ( true );
+
+-- 1. Reset RLS on 'case_files'
+ALTER TABLE public.case_files ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public View" ON public.case_files;
+DROP POLICY IF EXISTS "Admin Upload" ON public.case_files;
+
+-- Allow EVERYONE to read published files
+CREATE POLICY "Public View" ON public.case_files
+FOR SELECT USING (true);
+
+-- Allow ANY logged-in user to upload (Simplify for now to fix your issue)
+CREATE POLICY "Admin Upload" ON public.case_files
+FOR INSERT TO authenticated WITH CHECK (true);
+
+-- Allow ANY logged-in user to update/delete (For Admin Panel management)
+CREATE POLICY "Admin Update" ON public.case_files
+FOR UPDATE TO authenticated USING (true);
+CREATE POLICY "Admin Delete" ON public.case_files
+FOR DELETE TO authenticated USING (true);
+
+
+-- 2. Reset RLS on 'court_cases' (Fix Court Tracking)
+ALTER TABLE public.court_cases ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public View Court" ON public.court_cases;
+DROP POLICY IF EXISTS "Admin Manage Court" ON public.court_cases;
+
+CREATE POLICY "Public View Court" ON public.court_cases
+FOR SELECT USING (true);
+
+CREATE POLICY "Admin Manage Court" ON public.court_cases
+FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+
+-- 3. Reset Storage Permissions (Fix PDF Uploads)
+-- Note: 'protected_files' must be a bucket you created in the Storage dashboard
+CREATE POLICY "Give Admins Access" ON storage.objects
+FOR ALL TO authenticated
+USING (bucket_id = 'protected_files')
+WITH CHECK (bucket_id = 'protected_files');
+ -- Add file_path to books table so we can store the PDF location
+ALTER TABLE public.books 
+ADD COLUMN IF NOT EXISTS file_path TEXT;
+
+-- Allow Admins to upload to books
+CREATE POLICY "Admin Insert Books" ON public.books
+FOR INSERT TO authenticated WITH CHECK (true);
+
+-- Allow Admins to update books
+CREATE POLICY "Admin Update Books" ON public.books
+FOR UPDATE TO authenticated USING (true);

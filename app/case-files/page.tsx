@@ -4,6 +4,7 @@ import { Footer } from "@/components/layout/footer"
 import { CaseFilesContent } from "@/components/case-files/case-files-content"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ShieldCheckIcon, BookLawIcon } from "@/components/icons/legal-icons"
+import { createClient } from "@/lib/supabase/server"
 
 export const metadata = {
   title: "Case Files Library | Judicially Legal Ways",
@@ -24,7 +25,17 @@ function CaseFilesSkeleton() {
   )
 }
 
-export default function CaseFilesPage() {
+// Server Component
+export default async function CaseFilesPage() {
+  const supabase = await createClient()
+
+  // Fetch data on the server (No flicker)
+  const { data: caseFiles } = await supabase
+    .from("case_files")
+    .select("*")
+    .eq("is_published", true)
+    .order("created_at", { ascending: false })
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -74,7 +85,8 @@ export default function CaseFilesPage() {
         {/* Main Content */}
         <div className="container mx-auto px-4 py-8 lg:px-8">
           <Suspense fallback={<CaseFilesSkeleton />}>
-            <CaseFilesContent />
+            {/* Pass server data to client component */}
+            <CaseFilesContent initialCaseFiles={caseFiles || []} />
           </Suspense>
         </div>
       </main>

@@ -67,18 +67,18 @@ export function Footer() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mb-12 rounded-xl bg-primary p-8 lg:p-10"
+          className="mb-12 rounded-xl bg-primary p-6 sm:p-8 lg:p-10"
         >
           <div className="grid gap-6 lg:grid-cols-2 lg:items-center">
             <div>
-              <h3 className="font-serif text-2xl font-bold text-primary-foreground">
+              <h3 className="font-serif text-xl sm:text-2xl font-bold text-primary-foreground">
                 Stay Updated with Legal Insights
               </h3>
-              <p className="mt-2 text-primary-foreground/80">
+              <p className="mt-2 text-sm sm:text-base text-primary-foreground/80">
                 Get the latest court updates, case files, and exam tips delivered to your inbox.
               </p>
             </div>
-            <form onSubmit={handleSubscribe} className="flex gap-2">
+            <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2">
               <Input
                 type="email"
                 placeholder="Enter your email"
@@ -90,7 +90,7 @@ export function Footer() {
               <Button 
                 type="submit" 
                 variant="secondary"
-                className="gap-2 whitespace-nowrap"
+                className="gap-2 whitespace-nowrap w-full sm:w-auto"
                 disabled={isSubscribed}
               >
                 {isSubscribed ? (
@@ -107,7 +107,7 @@ export function Footer() {
         </motion.div>
 
         {/* Main Footer Content */}
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-6">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-6">
           {/* Brand Section */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -137,13 +137,13 @@ export function Footer() {
             </p>
             <div className="mt-6 space-y-3">
               <a 
-                href="mailto:contact@judicially.in" 
+                href="mailto:juidiciallegalways@gmail.com" 
                 className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
                   <Mail className="h-4 w-4" />
                 </div>
-                <span>contact@judicially.in</span>
+                <span>juidiciallegalways@gmail.com</span>
               </a>
               <a 
                 href="tel:+919876543210" 
@@ -262,67 +262,57 @@ export function Footer() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.6 }}
-          className="mt-12 flex flex-col items-center justify-between gap-6 border-t pt-8 md:flex-row"
+          className="mt-12 border-t pt-8"
         >
-          <div className="flex flex-col items-center gap-3 md:flex-row md:gap-6">
-            <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} Judicially Legal Ways. All rights reserved.
-            </p>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+            {/* Left - Links */}
+            <div className="flex items-center gap-3 sm:gap-4 text-xs text-muted-foreground order-2 sm:order-1">
               <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
               <span>•</span>
               <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
               <span>•</span>
               <Link href="/cookies" className="hover:text-primary transition-colors">Cookies</Link>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {socialLinks.map((social) => (
-              <motion.div
-                key={social.name}
-                whileHover={{ scale: 1.1, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link
-                  href={social.href}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
-                  aria-label={social.name}
+
+            {/* Center - Copyright & Powered by */}
+            <div className="flex flex-col items-center gap-2 text-center order-1 sm:order-2">
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                &copy; {new Date().getFullYear()} Judicially Legal Ways. All rights reserved.
+              </p>
+              <p className="text-xs text-muted-foreground/70">
+                Powered by{" "}
+                <a 
+                  href="https://www.linkedin.com/company/arccena-solutions" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="font-semibold text-muted-foreground hover:text-primary transition-colors"
                 >
-                  <social.icon className="h-4 w-4" />
-                </Link>
-              </motion.div>
-            ))}
+                  Arcenna Solutions
+                </a>
+              </p>
+            </div>
+
+            {/* Right - Social Links */}
+            <div className="flex items-center gap-2 sm:gap-3 order-3">
+              {socialLinks.map((social) => (
+                <motion.div
+                  key={social.name}
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Link
+                    href={social.href}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+                    aria-label={social.name}
+                  >
+                    <social.icon className="h-4 w-4" />
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </motion.div>
 
-        {/* Trust Badges */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.7 }}
-          className="mt-8 flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground"
-        >
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-green-500" />
-            <span>SSL Secured</span>
-          </div>
-          <span>•</span>
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-blue-500" />
-            <span>DRM Protected</span>
-          </div>
-          <span>•</span>
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-purple-500" />
-            <span>ISO Certified</span>
-          </div>
-          <span>•</span>
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-amber-500" />
-            <span>Trusted by 50,000+ Students</span>
-          </div>
-        </motion.div>
       </div>
     </footer>
   )

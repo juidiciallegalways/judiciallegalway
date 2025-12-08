@@ -1,12 +1,11 @@
 'use client'
 
-import React from "react"
+import React, { useEffect, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { ShieldCheckIcon, CourtBuildingIcon, BookLawIcon, CertificateIcon } from "@/components/icons/legal-icons"
 import { Clock, Users, Award } from "lucide-react"
-import { motion, useMotionValue } from "framer-motion"
+import { motion, useInView, useMotionValue, useSpring } from "framer-motion"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
-import { useCounterAnimation } from "@/hooks/use-counter-animation"
 import { fadeIn, fadeInUp, staggerContainer } from "@/lib/animation-variants"
 
 const features = [
@@ -40,43 +39,60 @@ const features = [
   },
 ]
 
+// Note: value is now a number for animation
 const stats = [
-  { icon: Users, value: "50,000+", numericValue: 50000, suffix: "+", label: "Active Students" },
-  { icon: BookLawIcon, value: "1,200+", numericValue: 1200, suffix: "+", label: "Study Materials" },
-  { icon: Clock, value: "500+", numericValue: 500, suffix: "+", label: "Video Hours" },
-  { icon: Award, value: "95%", numericValue: 95, suffix: "%", label: "Success Rate" },
+  { icon: Users, value: 50000, suffix: "+", label: "Active Students" },
+  { icon: BookLawIcon, value: 1200, suffix: "+", label: "Study Materials" },
+  { icon: Clock, value: 500, suffix: "+", label: "Video Hours" },
+  { icon: Award, value: 95, suffix: "%", label: "Success Rate" },
 ]
 
 function AnimatedStat({ 
   icon: Icon, 
-  numericValue, 
+  value, 
   suffix, 
-  label, 
-  isVisible 
+  label 
 }: { 
   icon: any
-  numericValue: number
+  value: number
   suffix: string
   label: string
-  isVisible: boolean
 }) {
-  const count = useCounterAnimation({ target: numericValue, duration: 1.5, isVisible })
-  const [displayValue, setDisplayValue] = React.useState(0)
+  const ref = useRef<HTMLSpanElement>(null)
+  const inViewRef = useRef<HTMLDivElement>(null)
+  const isInView = useInView(inViewRef, { once: true, margin: "-50px" })
+  
+  const motionValue = useMotionValue(0)
+  const springValue = useSpring(motionValue, {
+    damping: 30,
+    stiffness: 60, // Lower stiffness for a smoother, slower ease-out
+    duration: 2.5
+  })
 
-  React.useEffect(() => {
-    const unsubscribe = count.on('change', (latest) => {
-      setDisplayValue(latest)
+  useEffect(() => {
+    if (isInView) {
+      motionValue.set(value)
+    }
+  }, [isInView, value, motionValue])
+
+  useEffect(() => {
+    return springValue.on("change", (latest) => {
+      if (ref.current) {
+        // Format with commas (e.g., 50,000)
+        ref.current.textContent = Intl.NumberFormat('en-US').format(Math.floor(latest))
+      }
     })
-    return unsubscribe
-  }, [count])
+  }, [springValue])
 
   return (
-    <div className="text-center">
+    <div ref={inViewRef} className="text-center">
       <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary-foreground/10">
         <Icon className="h-7 w-7 text-primary-foreground" />
       </div>
-      <p className="font-serif text-4xl font-bold text-primary-foreground">
-        {displayValue.toLocaleString()}{suffix}
+      <p className="font-serif text-4xl font-bold text-primary-foreground flex justify-center items-baseline">
+        {/* tabular-nums ensures all numbers have equal width to prevent jitter */}
+        <span ref={ref} className="tabular-nums tracking-tight">0</span>
+        <span>{suffix}</span>
       </p>
       <p className="mt-1 text-primary-foreground/80">{label}</p>
     </div>
@@ -85,11 +101,10 @@ function AnimatedStat({
 
 export function ValueProposition() {
   const { isVisible, ref } = useScrollAnimation({ threshold: 0.1, triggerOnce: true })
-  const { isVisible: statsVisible, ref: statsRef } = useScrollAnimation({ threshold: 0.1, triggerOnce: true })
 
   return (
     <motion.section 
-      ref={ref as any}
+      ref={ref as React.RefObject<HTMLElement>}
       className="py-12 md:py-16"
       initial="hidden"
       animate={isVisible ? "visible" : "hidden"}
@@ -141,23 +156,19 @@ export function ValueProposition() {
         </motion.div>
 
         {/* Stats Section */}
-        <motion.div 
-          ref={statsRef as any}
-          className="mt-20 rounded-xl bg-primary p-8 lg:p-12"
-        >
+        <div className="mt-20 rounded-xl bg-primary p-8 lg:p-12 shadow-2xl">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((stat, i) => (
               <AnimatedStat
                 key={i}
                 icon={stat.icon}
-                numericValue={stat.numericValue}
+                value={stat.value}
                 suffix={stat.suffix}
                 label={stat.label}
-                isVisible={statsVisible}
               />
             ))}
           </div>
-        </motion.div>
+        </div>
       </div>
     </motion.section>
   )

@@ -208,7 +208,7 @@ export function Header() {
               </Button>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button asChild>
-                  <Link href="/auth/sign-up">Get Started</Link>
+                  <Link href="/auth/signup">Get Started</Link>
                 </Button>
               </motion.div>
             </div>
@@ -300,7 +300,7 @@ export function Header() {
                       <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
                     </Button>
                     <Button asChild>
-                      <Link href="/auth/sign-up" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
+                      <Link href="/auth/signup" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
                     </Button>
                   </div>
                 )}

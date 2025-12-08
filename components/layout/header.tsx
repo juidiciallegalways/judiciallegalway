@@ -222,88 +222,94 @@ export function Header() {
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-80">
-              <div className="flex flex-col gap-6 pt-6">
-                <Link href="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-                    <ScalesIcon className="h-6 w-6 text-primary-foreground" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-serif text-lg font-bold text-primary">Judicially</span>
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">PRO</Badge>
+            <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0">
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="p-6 border-b">
+                  <Link href="/" className="flex items-center gap-3" onClick={() => setMobileMenuOpen(false)}>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+                      <ScalesIcon className="h-6 w-6 text-primary-foreground" />
                     </div>
-                    <span className="text-xs text-muted-foreground">Legal Ways</span>
-                  </div>
-                </Link>
-                
+                    <div>
+                      <span className="font-serif text-lg font-bold text-primary block">Judicially</span>
+                      <span className="text-xs text-muted-foreground">Legal Ways</span>
+                    </div>
+                  </Link>
+                </div>
+
+                {/* User Info */}
                 {user && (
-                  <div className="rounded-lg bg-muted p-3">
+                  <div className="px-6 py-4 bg-muted/50">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold text-sm">
                         {user.email?.[0].toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{user.email}</p>
+                        <p className="text-sm font-medium truncate">{user.email?.split('@')[0]}</p>
                         <p className="text-xs text-muted-foreground">Free Plan</p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                <nav className="flex flex-col gap-2">
-                  {navigation.map((item) => {
-                    const isActive = pathname === item.href
-                    return (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                          isActive 
-                            ? "bg-primary text-primary-foreground" 
-                            : "text-foreground/80 hover:bg-muted hover:text-foreground"
-                        }`}
-                      >
-                        {item.icon && <item.icon className="h-5 w-5" />}
-                        {item.name}
-                      </Link>
-                    )
-                  })}
+                {/* Navigation */}
+                <nav className="flex-1 px-4 py-6 overflow-y-auto">
+                  <div className="space-y-1">
+                    {navigation.map((item) => {
+                      const isActive = pathname === item.href
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all ${
+                            isActive 
+                              ? "bg-primary text-primary-foreground shadow-sm" 
+                              : "text-foreground/70 hover:bg-muted hover:text-foreground"
+                          }`}
+                        >
+                          {item.icon && <item.icon className="h-5 w-5 shrink-0" />}
+                          <span>{item.name}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
                 </nav>
 
-                {user ? (
-                  <div className="flex flex-col gap-2 pt-4 border-t">
-                    <Button variant="outline" asChild>
-                      <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                        <User className="mr-2 h-4 w-4" />
-                        Dashboard
-                      </Link>
-                    </Button>
-                    <Button variant="outline" asChild>
-                      <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
-                        <Settings className="mr-2 h-4 w-4" />
-                        Settings
-                      </Link>
-                    </Button>
-                    <Button variant="destructive" onClick={() => {
-                      handleSignOut()
-                      setMobileMenuOpen(false)
-                    }}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-2 pt-4 border-t">
-                    <Button variant="outline" asChild>
-                      <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
-                    </Button>
-                    <Button asChild>
-                      <Link href="/auth/sign-up" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
-                    </Button>
-                  </div>
-                )}
+                {/* Footer Actions */}
+                <div className="p-4 border-t bg-background">
+                  {user ? (
+                    <div className="space-y-2">
+                      <Button variant="outline" size="sm" className="w-full justify-start" asChild>
+                        <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
+                          <Settings className="mr-2 h-4 w-4" />
+                          Settings
+                        </Link>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" 
+                        onClick={() => {
+                          handleSignOut()
+                          setMobileMenuOpen(false)
+                        }}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Sign Out
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Button variant="outline" size="sm" className="w-full" asChild>
+                        <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
+                      </Button>
+                      <Button size="sm" className="w-full" asChild>
+                        <Link href="/auth/signup" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </SheetContent>
           </Sheet>

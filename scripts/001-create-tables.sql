@@ -187,3 +187,14 @@ CREATE INDEX IF NOT EXISTS idx_court_cases_case_number ON public.court_cases(cas
 CREATE INDEX IF NOT EXISTS idx_books_category ON public.books(category);
 CREATE INDEX IF NOT EXISTS idx_purchases_user_id ON public.purchases(user_id);
 CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON public.activity_logs(user_id);
+
+
+-- created by piyush -- 
+--Allow authenticated uploads (Admin/You)
+create policy "Allow authenticated uploads"
+on storage.objects for insert
+to authenticated
+with check ( bucket_id = 'protected_files' );
+
+-- Allow viewing only via Signed URLs (handled by server logic)
+-- No "select" policy needed for public because it's private!

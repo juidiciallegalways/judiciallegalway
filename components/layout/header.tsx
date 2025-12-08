@@ -123,6 +123,7 @@ export function Header() {
 
         {/* Right Side Actions */}
         <div className="flex items-center gap-2">
+          {/* Notifications */}
           {user && (
             <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
               <Bell className="h-5 w-5" />
@@ -138,6 +139,7 @@ export function Header() {
             </Button>
           )}
 
+          {/* Theme Toggle */}
           {mounted && (
             <Button
               variant="ghost"
@@ -160,6 +162,7 @@ export function Header() {
             </Button>
           )}
 
+          {/* User Menu */}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -211,7 +214,7 @@ export function Header() {
             </div>
           )}
 
-          {/* Mobile Menu */}
+          {/* Mobile Menu Trigger */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="lg:hidden">
               <Button variant="ghost" size="icon">
@@ -232,20 +235,6 @@ export function Header() {
                     </div>
                   </Link>
                 </div>
-
-                {user && (
-                  <div className="px-6 py-4 bg-muted/50">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold text-sm">
-                        {user.email?.[0].toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{user.email?.split('@')[0]}</p>
-                        <p className="text-xs text-muted-foreground">Free Plan</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 <nav className="flex-1 px-4 py-6 overflow-y-auto">
                   <div className="space-y-1">

@@ -97,7 +97,7 @@ export function HeroSection() {
 
             {/* CTA Buttons */}
             <motion.div 
-              className="mt-8 flex flex-wrap items-center gap-4"
+              className="mt-8 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3"
               initial={enableAnimations ? "hidden" : false}
               animate={enableAnimations ? "visible" : false}
               variants={{
@@ -123,7 +123,7 @@ export function HeroSection() {
                 whileHover={enableAnimations ? { scale: 1.05 } : undefined}
                 transition={{ duration: 0.2 }}
               >
-                <Button size="lg" className="gap-2 px-8" asChild>
+                <Button size="lg" className="gap-2 w-full sm:w-auto sm:px-8" asChild>
                   <Link href="/case-files">
                     <BookOpen className="h-5 w-5" />
                     Explore Case Files
@@ -142,7 +142,7 @@ export function HeroSection() {
                 whileHover={enableAnimations ? { scale: 1.05 } : undefined}
                 transition={{ duration: 0.2 }}
               >
-                <Button size="lg" variant="outline" className="gap-2 px-8 bg-transparent" asChild>
+                <Button size="lg" variant="outline" className="gap-2 w-full sm:w-auto sm:px-8 bg-transparent" asChild>
                   <Link href="/court-tracker">
                     <CourtBuildingIcon className="h-5 w-5" />
                     Track Court Cases
@@ -153,7 +153,7 @@ export function HeroSection() {
 
             {/* Trust Indicators */}
             <motion.div 
-              className="mt-12 flex flex-wrap items-center gap-8"
+              className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
               initial={enableAnimations ? "hidden" : false}
               animate={enableAnimations ? "visible" : false}
               variants={{
@@ -168,10 +168,10 @@ export function HeroSection() {
               }}
             >
               <motion.div 
-                className="flex items-center gap-3"
+                className="flex items-center gap-3 p-4 rounded-lg bg-muted/50"
                 variants={fadeInUp}
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 shrink-0">
                   <ShieldCheckIcon className="h-6 w-6 text-primary" />
                 </div>
                 <div>
@@ -180,10 +180,10 @@ export function HeroSection() {
                 </div>
               </motion.div>
               <motion.div 
-                className="flex items-center gap-3"
+                className="flex items-center gap-3 p-4 rounded-lg bg-muted/50"
                 variants={fadeInUp}
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 shrink-0">
                   <ScalesIcon className="h-6 w-6 text-accent" />
                 </div>
                 <div>
@@ -192,10 +192,10 @@ export function HeroSection() {
                 </div>
               </motion.div>
               <motion.div 
-                className="flex items-center gap-3"
+                className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 sm:col-span-2 lg:col-span-1"
                 variants={fadeInUp}
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 shrink-0">
                   <BookOpen className="h-6 w-6 text-primary" />
                 </div>
                 <div>

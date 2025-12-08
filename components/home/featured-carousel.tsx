@@ -189,7 +189,7 @@ export function FeaturedCarousel() {
         </div>
 
         <div 
-          className="overflow-hidden carousel-container"
+          className="overflow-hidden carousel-container -mx-4 px-4 sm:mx-0 sm:px-0"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
@@ -202,7 +202,7 @@ export function FeaturedCarousel() {
               transition={{ duration: 0.5 }}
             >
               <motion.div
-            className="flex gap-6"
+            className="flex gap-4 sm:gap-6"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.2}
@@ -219,8 +219,8 @@ export function FeaturedCarousel() {
             {featuredItems.map((item) => (
               <motion.div
                 key={item.id}
-                className="flex-shrink-0"
-                style={{ width: `calc(${100 / itemsPerView}% - ${((itemsPerView - 1) * 24) / itemsPerView}px)` }}
+                className="flex-shrink-0 px-2 sm:px-0"
+                style={{ width: itemsPerView === 1 ? 'calc(100% - 16px)' : `calc(${100 / itemsPerView}% - ${((itemsPerView - 1) * 24) / itemsPerView}px)` }}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}

@@ -12,7 +12,8 @@ import { toast } from "sonner"
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 export default function ReaderPage() {
-  const { id } = useParams()
+  const params = useParams()
+  const id = params?.id as string // Casts it to string to satisfy Supabase
   const router = useRouter()
   const supabase = createClient()
   

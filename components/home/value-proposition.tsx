@@ -41,10 +41,10 @@ const features = [
 
 // Note: value is now a number for animation
 const stats = [
-  { icon: Users, value: 50000, suffix: "+", label: "Active Students" },
-  { icon: BookLawIcon, value: 1200, suffix: "+", label: "Study Materials" },
-  { icon: Clock, value: 500, suffix: "+", label: "Video Hours" },
-  { icon: Award, value: 95, suffix: "%", label: "Success Rate" },
+  { icon: Users, value: 500, suffix: "+", label: "Active Students" },
+  { icon: BookLawIcon, value: 120, suffix: "+", label: "Study Materials" },
+  { icon: Clock, value: 50, suffix: "+", label: "Video Hours" },
+  { icon: Award, value: 90, suffix: "%", label: "Success Rate" },
 ]
 
 function AnimatedStat({ 
@@ -66,7 +66,7 @@ function AnimatedStat({
   const springValue = useSpring(motionValue, {
     damping: 30,
     stiffness: 60, // Lower stiffness for a smoother, slower ease-out
-    duration: 2.5
+    duration: 4
   })
 
   useEffect(() => {

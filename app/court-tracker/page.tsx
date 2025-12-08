@@ -15,7 +15,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-// --- TYPE DEFINITIONS (Production Standard) ---
+// --- TYPE DEFINITIONS ---
 export interface CourtCase {
   id: string
   case_number: string
@@ -27,23 +27,23 @@ export interface CourtCase {
   last_updated: string
 }
 
-// This interface tells TypeScript: "I expect a list of cases when this component loads"
 interface CourtTrackerContentProps {
   initialCases: CourtCase[]
 }
 
-export function CourtTrackerContent({ initialCases }: CourtTrackerContentProps) {
-  // Initialize state with the Server Data immediately (No Flicker)
-  const [cases, setCases] = useState<CourtCase[]>(initialCases || [])
+export function CourtTrackerContent({ initialCases = [] }: CourtTrackerContentProps) {
+  // 1. Initialize State (Default to empty array if undefined to prevent crash)
+  const [cases, setCases] = useState<CourtCase[]>(initialCases)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedCase, setSelectedCase] = useState<CourtCase | null>(null)
 
-  // Client-Side Filtering (Instant Speed for <500 items)
+  // 2. Client-Side Filtering
   const filteredCases = cases.filter((c) => {
     const searchLower = searchQuery.toLowerCase()
     
-    // Safety check: ensure fields exist before calling toLowerCase
+    // Safety check for null/undefined fields
     const caseNo = c.case_number?.toLowerCase() || ""
     const pet = c.petitioner?.toLowerCase() || ""
     const resp = c.respondent?.toLowerCase() || ""
@@ -60,8 +60,8 @@ export function CourtTrackerContent({ initialCases }: CourtTrackerContentProps) 
     return matchesSearch && matchesStatus
   })
 
-  // Format Date safely
-  const formatDate = (dateString: string) => {
+  // Format Date Safely
+  const formatDate = (dateString: string | null) => {
     if (!dateString) return "Not Scheduled"
     try {
       return new Date(dateString).toLocaleDateString("en-IN", {
@@ -75,7 +75,7 @@ export function CourtTrackerContent({ initialCases }: CourtTrackerContentProps) 
   }
 
   // Dynamic Status Colors
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | null) => {
     const s = status?.toLowerCase() || ""
     if (s.includes("disposed")) return "bg-green-100 text-green-700 border-green-200"
     if (s.includes("adjourned")) return "bg-amber-100 text-amber-700 border-amber-200"
@@ -83,8 +83,7 @@ export function CourtTrackerContent({ initialCases }: CourtTrackerContentProps) 
     return "bg-blue-100 text-blue-700 border-blue-200"
   }
 
-  const handleTrackCase = (caseId: string) => {
-    // In a real app, this would make an API call to save to user's watchlist
+  const handleTrackCase = () => {
     toast.success("Case Added to Watchlist", {
       description: "You will receive notifications for hearing updates."
     })
@@ -92,7 +91,7 @@ export function CourtTrackerContent({ initialCases }: CourtTrackerContentProps) 
 
   return (
     <div className="space-y-8">
-      {/* Header & Search Controls */}
+      {/* Header & Controls */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-end md:items-center bg-card p-4 rounded-xl border shadow-sm">
         <div className="w-full md:w-96 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -217,7 +216,7 @@ export function CourtTrackerContent({ initialCases }: CourtTrackerContentProps) 
                               Case Timeline
                             </h4>
                             <div className="border-l-2 border-muted pl-4 space-y-6 ml-2">
-                              {/* Visual Timeline - in production this would map through a 'history' array */}
+                              {/* Visual Timeline */}
                               <div className="relative">
                                 <div className="absolute -left-[21px] top-1 h-3 w-3 rounded-full bg-primary ring-4 ring-background" />
                                 <p className="text-sm font-medium">Current Status</p>
@@ -234,7 +233,7 @@ export function CourtTrackerContent({ initialCases }: CourtTrackerContentProps) 
                       </DialogContent>
                     </Dialog>
                     
-                    <Button onClick={() => handleTrackCase(courtCase.id)} size="icon" variant="default">
+                    <Button onClick={() => handleTrackCase()} size="icon" variant="default">
                       <Bell className="h-4 w-4" />
                     </Button>
                   </CardFooter>

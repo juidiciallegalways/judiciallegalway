@@ -15,6 +15,7 @@ import { BookLawIcon, ScalesIcon } from "@/components/icons/legal-icons"
 import { BookOpen, Bookmark, Clock, LogOut, Edit2, Save, Award, FileText } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
+import { toast } from "sonner"
 
 interface Profile {
   id: string
@@ -108,14 +109,19 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
 
   const handleSave = async () => {
     const supabase = createClient()
-    await supabase.from("profiles").upsert({
+    const { error } = await supabase.from("profiles").upsert({
       id: user.id,
       ...formData,
       email: user.email,
       updated_at: new Date().toISOString(),
     })
-    setIsEditing(false)
-    router.refresh()
+    if (error) {
+      toast.error("Failed to update profile")
+    } else {
+      setIsEditing(false)
+      toast.success("Profile updated successfully")
+      // Don't refresh - just update local state
+    }
   }
 
   const handleSignOut = async () => {

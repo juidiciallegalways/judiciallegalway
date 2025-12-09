@@ -50,18 +50,17 @@ export function Header() {
     }
     getInitialUser()
 
-    // Listen to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setUser(session?.user ?? null)
-        // Refresh the page to ensure server components get updated session
-        if (event === 'SIGNED_IN') {
-          setTimeout(() => window.location.reload(), 100)
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null)
-      } else {
-        setUser(session?.user ?? null)
+    // Listen to auth state changes - NO PAGE RELOADS
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Only update state - never reload page
+      setUser(session?.user ?? null)
+      
+      // Only redirect on explicit sign out
+      if (event === 'SIGNED_OUT' && !session) {
+        // Small delay then redirect
+        setTimeout(() => {
+          window.location.href = '/'
+        }, 200)
       }
     })
 
@@ -78,7 +77,10 @@ export function Header() {
     const supabase = createClient()
     await supabase.auth.signOut()
     setUser(null)
-    window.location.href = "/"
+    // Use router for smoother navigation
+    setTimeout(() => {
+      window.location.href = "/"
+    }, 100)
   }
 
   return (

@@ -120,32 +120,62 @@ export function AdminDashboard() {
     }
   }
 
-  // Check admin status on mount
+  // Check admin status on mount (only once)
   useEffect(() => {
+    let isMounted = true
+    let hasChecked = false
+    
     async function checkAdmin() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        window.location.href = "/auth/login?next=/admin"
-        return
-      }
+      if (hasChecked) return
+      hasChecked = true
+      
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          if (isMounted) {
+            const next = encodeURIComponent('/admin')
+            window.location.href = `/auth/login?next=${next}`
+          }
+          return
+        }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single()
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle()
 
-      if (profile?.role === "admin") {
-        setIsAdmin(true)
-        setCheckingAuth(false)
-        // Fetch data after confirming admin
-        fetchData()
-      } else {
-        toast.error("Admin access required")
-        setTimeout(() => window.location.href = "/", 1000)
+        if (!isMounted) return
+
+        if (profile?.role === "admin") {
+          setIsAdmin(true)
+          setCheckingAuth(false)
+          // Fetch data after confirming admin
+          fetchData()
+        } else {
+          if (isMounted) {
+            setCheckingAuth(false)
+            toast.error("Admin access required")
+            setTimeout(() => {
+              if (isMounted) {
+                window.location.href = "/"
+              }
+            }, 1500)
+          }
+        }
+      } catch (error) {
+        console.error("Admin check error:", error)
+        if (isMounted) {
+          setCheckingAuth(false)
+        }
       }
     }
+    
     checkAdmin()
+    
+    return () => {
+      isMounted = false
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

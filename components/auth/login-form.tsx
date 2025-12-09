@@ -49,8 +49,8 @@ export function LoginForm() {
       const urlParams = new URLSearchParams(window.location.search)
       const next = urlParams.get('next') || '/'
       
-      // Force a hard redirect to ensure session is loaded
-      window.location.href = next
+      // Use router.push only, no refresh to prevent loops
+      router.push(next)
     }
   }
 

@@ -21,6 +21,8 @@ export function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [file, setFile] = useState<File | null>(null)
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+  const [coverFile, setCoverFile] = useState<File | null>(null)
 
   // Data
   const [caseFiles, setCaseFiles] = useState<any[]>([])
@@ -112,11 +114,29 @@ export function AdminDashboard() {
   useEffect(() => { fetchData() }, [])
 
   // Upload Logic
-  const uploadFile = async (file: File) => {
+  const uploadFile = async (file: File, folder: string = 'case-files') => {
     const fileName = `${Date.now()}-${file.name.replace(/\s/g, '_')}`
-    const { error } = await supabase.storage.from('protected_files').upload(`case-files/${fileName}`, file)
+    const { error } = await supabase.storage.from('protected_files').upload(`${folder}/${fileName}`, file)
     if (error) throw error
-    return `case-files/${fileName}`
+    return `${folder}/${fileName}`
+  }
+
+  // Upload Image/Thumbnail
+  const uploadImage = async (file: File, folder: string = 'thumbnails') => {
+    // Check if file is an image
+    if (!file.type.startsWith('image/')) {
+      throw new Error('File must be an image')
+    }
+    const fileName = `${Date.now()}-${file.name.replace(/\s/g, '_')}`
+    const { error } = await supabase.storage.from('protected_files').upload(`${folder}/${fileName}`, file, {
+      cacheControl: '3600',
+      upsert: false
+    })
+    if (error) throw error
+    
+    // Get public URL (or signed URL for private bucket)
+    const { data } = await supabase.storage.from('protected_files').getPublicUrl(`${folder}/${fileName}`)
+    return data.publicUrl
   }
 
   // 1. LIBRARY UPLOAD
@@ -124,7 +144,14 @@ export function AdminDashboard() {
     if (!file || !libForm.title) return toast.error("File & Title required")
     setUploading(true)
     try {
-      const path = await uploadFile(file)
+      const path = await uploadFile(file, 'case-files')
+      let thumbnailUrl = "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800"
+      
+      // Upload thumbnail if provided
+      if (thumbnailFile) {
+        thumbnailUrl = await uploadImage(thumbnailFile, 'thumbnails')
+      }
+      
       const { error } = await supabase.from('case_files').insert({
         title: libForm.title,
         description: libForm.desc,
@@ -139,11 +166,12 @@ export function AdminDashboard() {
         tags: libForm.tags.split(',').map(s => s.trim()),
         file_path: path,
         is_published: true,
-        thumbnail_url: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800"
+        thumbnail_url: thumbnailUrl
       })
       if (error) throw error
       toast.success("Case File Published!")
       setFile(null)
+      setThumbnailFile(null)
       setLibForm({
         title: "", desc: "", caseNumber: "", courtName: "", category: "constitutional", 
         subcategory: "", year: new Date().getFullYear(), price: "0", totalPages: "10", 
@@ -159,7 +187,14 @@ export function AdminDashboard() {
     if (!file || !bookForm.title) return toast.error("File & Title required")
     setUploading(true)
     try {
-      const path = await uploadFile(file)
+      const path = await uploadFile(file, 'books')
+      let coverUrl = "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800"
+      
+      // Upload cover if provided
+      if (coverFile) {
+        coverUrl = await uploadImage(coverFile, 'covers')
+      }
+      
       const { error } = await supabase.from('books').insert({
         title: bookForm.title,
         author: bookForm.author,
@@ -173,11 +208,12 @@ export function AdminDashboard() {
         pages: Number(bookForm.pages),
         file_path: path,
         is_published: true,
-        cover_url: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800"
+        cover_url: coverUrl
       })
       if (error) throw error
       toast.success("Book Published!")
       setFile(null)
+      setCoverFile(null)
       setBookForm({
         title: "", author: "", desc: "", price: "0", originalPrice: "0", 
         stock: "100", category: "law_notes", isbn: "", publisher: "", pages: "200"
@@ -335,7 +371,21 @@ export function AdminDashboard() {
                 <Input type="number" placeholder="Price" value={libForm.price} onChange={e => setLibForm({...libForm, price: e.target.value})} />
                 <Input placeholder="Tags (comma sep)" value={libForm.tags} onChange={e => setLibForm({...libForm, tags: e.target.value})} />
               </div>
-              <Input type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>PDF/Document File *</Label>
+                  <Input type="file" accept=".pdf,.doc,.docx" onChange={e => setFile(e.target.files?.[0] || null)} />
+                </div>
+                <div>
+                  <Label>Thumbnail Image (Optional)</Label>
+                  <Input type="file" accept="image/*" onChange={e => setThumbnailFile(e.target.files?.[0] || null)} />
+                </div>
+              </div>
+              {thumbnailFile && (
+                <div className="text-sm text-muted-foreground">
+                  Preview: <img src={URL.createObjectURL(thumbnailFile)} alt="Preview" className="h-20 w-20 object-cover rounded mt-2" />
+                </div>
+              )}
               <Button onClick={handleLibUpload} disabled={uploading}>{uploading ? "Uploading..." : "Publish"}</Button>
             </div>
           </Card>
@@ -398,7 +448,21 @@ export function AdminDashboard() {
                   <Input type="number" placeholder="Original Price" value={bookForm.originalPrice} onChange={e => setBookForm({...bookForm, originalPrice: e.target.value})} />
                   <Input type="number" placeholder="Stock" value={bookForm.stock} onChange={e => setBookForm({...bookForm, stock: e.target.value})} />
                 </div>
-                <Input type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>PDF/Document File *</Label>
+                    <Input type="file" accept=".pdf,.doc,.docx" onChange={e => setFile(e.target.files?.[0] || null)} />
+                  </div>
+                  <div>
+                    <Label>Cover Image (Optional)</Label>
+                    <Input type="file" accept="image/*" onChange={e => setCoverFile(e.target.files?.[0] || null)} />
+                  </div>
+                </div>
+                {coverFile && (
+                  <div className="text-sm text-muted-foreground">
+                    Preview: <img src={URL.createObjectURL(coverFile)} alt="Preview" className="h-32 w-24 object-cover rounded mt-2" />
+                  </div>
+                )}
                 <Button onClick={handleBookUpload} disabled={uploading}>Publish Book</Button>
              </div>
           </Card>

@@ -34,11 +34,22 @@ export function Header() {
   useEffect(() => {
     setMounted(true)
     const supabase = createClient()
+    
+    // Get initial user
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
+
+    // Listen to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
 
     const handleScroll = () => setIsScrolled(window.scrollY > 10)
     window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
+    
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener("scroll", handleScroll)
+    }
   }, [])
 
   const handleSignOut = async () => {

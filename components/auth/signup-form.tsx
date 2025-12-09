@@ -76,6 +76,8 @@ export function SignupForm() {
         full_name: fullName,
         role: "student",
       })
+      // Wait for session to be established
+      await new Promise(resolve => setTimeout(resolve, 200))
       setSuccess(true)
       setLoading(false)
     }

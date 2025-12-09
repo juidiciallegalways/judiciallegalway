@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { motion } from "framer-motion"
 import { useCart } from "@/contexts/cart-context"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -9,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import { Lock, BookOpen, ShoppingBag, ArrowLeft, IndianRupee, Calendar, MapPin, FileText, Tag, CheckCircle2 } from "lucide-react"
+import { Lock, BookOpen, ShoppingBag, ArrowLeft, IndianRupee, Calendar, MapPin, FileText, Tag, CheckCircle2, Eye, Download, Share2 } from "lucide-react"
 
 export function CaseFileDetailContent({ caseFile }: { caseFile: any }) {
   const { addItem, items } = useCart()
@@ -65,6 +66,33 @@ export function CaseFileDetailContent({ caseFile }: { caseFile: any }) {
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Thumbnail Preview */}
+            {caseFile.thumbnail_url && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+                className="relative aspect-video w-full rounded-xl overflow-hidden bg-muted mb-6"
+              >
+                <img
+                  src={caseFile.thumbnail_url}
+                  alt={caseFile.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+                  <div className="text-white">
+                    <Badge variant="secondary" className="mb-2">{caseFile.category}</Badge>
+                    {caseFile.is_premium && (
+                      <Badge className="bg-amber-500 text-white gap-1 ml-2">
+                        <Lock className="h-3 w-3" />
+                        Premium
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+            
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Badge variant="secondary">{caseFile.category}</Badge>
@@ -75,7 +103,13 @@ export function CaseFileDetailContent({ caseFile }: { caseFile: any }) {
                   </Badge>
                 )}
               </div>
-              <h1 className="text-4xl font-serif font-bold mb-2">{caseFile.title}</h1>
+              <motion.h1 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-4xl font-serif font-bold mb-2"
+              >
+                {caseFile.title}
+              </motion.h1>
               <div className="flex items-center gap-4 text-muted-foreground mb-6">
                 <div className="flex items-center gap-1">
                   <FileText className="h-4 w-4" />
@@ -95,14 +129,49 @@ export function CaseFileDetailContent({ caseFile }: { caseFile: any }) {
             </div>
 
             {/* Description */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-lg mb-3">Description</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {caseFile.description || 'No description available.'}
-                </p>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="font-semibold text-lg mb-3">Description</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {caseFile.description || 'No description available.'}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+            
+            {/* Preview Section */}
+            {hasPurchased && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-lg flex items-center gap-2">
+                        <Eye className="h-5 w-5 text-primary" />
+                        Preview Available
+                      </h3>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/reader/${caseFile.id}`}>
+                          <BookOpen className="mr-2 h-4 w-4" />
+                          Read Now
+                        </Link>
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      You have access to this case file. Click "Read Now" to view the full document with DRM protection.
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
             {/* Tags */}
             {caseFile.tags && caseFile.tags.length > 0 && (
@@ -177,8 +246,13 @@ export function CaseFileDetailContent({ caseFile }: { caseFile: any }) {
 
           {/* Sidebar - Purchase */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-24">
-              <CardContent className="p-6 space-y-6">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              <Card className="sticky top-24">
+                <CardContent className="p-6 space-y-6">
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Price</p>
                   <div className="flex items-baseline gap-2">
@@ -252,6 +326,7 @@ export function CaseFileDetailContent({ caseFile }: { caseFile: any }) {
                 </div>
               </CardContent>
             </Card>
+            </motion.div>
           </div>
         </div>
       </div>

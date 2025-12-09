@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -20,6 +21,7 @@ import {
   BookOpen,
   FileText,
   Award,
+  Eye,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useCart } from "@/contexts/cart-context"
@@ -148,26 +150,43 @@ export function BookDetailContent({ bookId }: { bookId: string }) {
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Book Image */}
           <div className="space-y-4">
-            <Card className="overflow-hidden">
-              <div className="aspect-[3/4] bg-muted relative">
-                <img
-                  src={book.cover_url || "/placeholder.svg?height=600&width=450&query=law+book+cover"}
-                  alt={book.title}
-                  className="h-full w-full object-cover"
-                />
-                {discount > 0 && (
-                  <Badge className="absolute top-4 left-4 bg-destructive text-destructive-foreground text-lg px-3 py-1">
-                    {discount}% OFF
-                  </Badge>
-                )}
-                {book.is_bundle && (
-                  <Badge className="absolute top-4 right-4 bg-accent text-accent-foreground gap-1">
-                    <Package className="h-4 w-4" />
-                    Bundle
-                  </Badge>
-                )}
-              </div>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className="overflow-hidden group">
+                <div className="aspect-[3/4] bg-muted relative overflow-hidden">
+                  <img
+                    src={book.cover_url || "/placeholder.svg?height=600&width=450&query=law+book+cover"}
+                    alt={book.title}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  {discount > 0 && (
+                    <Badge className="absolute top-4 left-4 bg-destructive text-destructive-foreground text-lg px-3 py-1 z-10">
+                      {discount}% OFF
+                    </Badge>
+                  )}
+                  {book.is_bundle && (
+                    <Badge className="absolute top-4 right-4 bg-accent text-accent-foreground gap-1 z-10">
+                      <Package className="h-4 w-4" />
+                      Bundle
+                    </Badge>
+                  )}
+                  {/* Preview Overlay */}
+                  {hasPurchased && (
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button variant="outline" className="bg-white text-black hover:bg-white/90" asChild>
+                        <Link href={`/store/read/${book.id}`}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          Preview
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </motion.div>
 
             {/* Preview Images */}
             <div className="grid grid-cols-4 gap-2">

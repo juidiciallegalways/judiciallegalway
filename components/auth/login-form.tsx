@@ -42,8 +42,9 @@ export function LoginForm() {
       setError(error.message)
       setLoading(false)
     } else {
-      router.push("/")
-      router.refresh()
+      // Wait a bit for session to be established, then redirect
+      await new Promise(resolve => setTimeout(resolve, 100))
+      window.location.href = "/"
     }
   }
 

@@ -25,17 +25,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
 
-  // Load cart from localStorage only on client side
+  // Load from LocalStorage
   useEffect(() => {
-    const saved = localStorage.getItem("cart")
-    if (saved) setItems(JSON.parse(saved))
-    setIsLoaded(true)
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("judicial-cart")
+      if (saved) setItems(JSON.parse(saved))
+      setIsLoaded(true)
+    }
   }, [])
 
-  // Save cart to localStorage
+  // Save to LocalStorage
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem("cart", JSON.stringify(items))
+      localStorage.setItem("judicial-cart", JSON.stringify(items))
     }
   }, [items, isLoaded])
 

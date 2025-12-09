@@ -35,12 +35,34 @@ export function Header() {
     setMounted(true)
     const supabase = createClient()
     
-    // Get initial user
-    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    // Get initial user with retry
+    async function getInitialUser() {
+      try {
+        const { data, error } = await supabase.auth.getUser()
+        if (data?.user) {
+          setUser(data.user)
+        } else if (error) {
+          console.error("Auth error:", error)
+        }
+      } catch (err) {
+        console.error("Failed to get user:", err)
+      }
+    }
+    getInitialUser()
 
     // Listen to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setUser(session?.user ?? null)
+        // Refresh the page to ensure server components get updated session
+        if (event === 'SIGNED_IN') {
+          setTimeout(() => window.location.reload(), 100)
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null)
+      } else {
+        setUser(session?.user ?? null)
+      }
     })
 
     const handleScroll = () => setIsScrolled(window.scrollY > 10)

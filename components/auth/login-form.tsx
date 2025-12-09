@@ -42,9 +42,15 @@ export function LoginForm() {
       setError(error.message)
       setLoading(false)
     } else {
-      // Wait a bit for session to be established, then redirect
-      await new Promise(resolve => setTimeout(resolve, 100))
-      window.location.href = "/"
+      // Wait for session to be fully established
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // Get the next parameter from URL
+      const urlParams = new URLSearchParams(window.location.search)
+      const next = urlParams.get('next') || '/'
+      
+      // Force a hard redirect to ensure session is loaded
+      window.location.href = next
     }
   }
 

@@ -23,6 +23,8 @@ export function AdminDashboard() {
   const [file, setFile] = useState<File | null>(null)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
 
   // Data
   const [caseFiles, setCaseFiles] = useState<any[]>([])
@@ -118,7 +120,34 @@ export function AdminDashboard() {
     }
   }
 
-  useEffect(() => { fetchData() }, [])
+  // Check admin status on mount
+  useEffect(() => {
+    async function checkAdmin() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        window.location.href = "/auth/login?next=/admin"
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single()
+
+      if (profile?.role === "admin") {
+        setIsAdmin(true)
+        setCheckingAuth(false)
+        // Fetch data after confirming admin
+        fetchData()
+      } else {
+        toast.error("Admin access required")
+        setTimeout(() => window.location.href = "/", 1000)
+      }
+    }
+    checkAdmin()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Upload Logic
   const uploadFile = async (file: File, folder: string = 'case-files') => {
@@ -289,6 +318,23 @@ export function AdminDashboard() {
       toast.success("Role updated")
       fetchData()
     }
+  }
+
+  if (checkingAuth) {
+    return (
+      <div className="container mx-auto py-20 text-center">
+        <Loader2 className="animate-spin mx-auto h-8 w-8 mb-4" />
+        <p className="text-muted-foreground">Verifying admin access...</p>
+      </div>
+    )
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="container mx-auto py-20 text-center">
+        <p className="text-destructive">Admin access required</p>
+      </div>
+    )
   }
 
   if (isLoading) {

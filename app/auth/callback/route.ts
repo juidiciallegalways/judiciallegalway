@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
@@ -14,6 +14,9 @@ export async function GET(request: Request) {
       const { error } = await supabase.auth.exchangeCodeForSession(code)
       
       if (!error) {
+        // Wait a bit for session to be fully established
+        await new Promise(resolve => setTimeout(resolve, 200))
+        
         const forwardedHost = request.headers.get('x-forwarded-host')
         
         // Handle different environments

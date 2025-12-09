@@ -25,8 +25,8 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protected routes
-  const protectedRoutes = ["/dashboard", "/profile", "/reader", "/admin"]
+  // Protected routes (except admin - let page handle it)
+  const protectedRoutes = ["/dashboard", "/profile", "/reader"]
   const isProtectedRoute = protectedRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
 
   if (isProtectedRoute && !user) {
@@ -35,16 +35,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Admin routes
-  if (request.nextUrl.pathname.startsWith("/admin") && user) {
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-
-    if (profile?.role !== "admin") {
-      const url = request.nextUrl.clone()
-      url.pathname = "/dashboard"
-      return NextResponse.redirect(url)
-    }
-  }
+  // Don't check admin in middleware - let the page component handle it
+  // This prevents race conditions with profile loading
 
   return supabaseResponse
 }

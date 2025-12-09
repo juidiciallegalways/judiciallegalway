@@ -100,22 +100,19 @@ export default function ReaderPage() {
 
       setUrl(signed.signedUrl)
       
-      // Get user info for watermark
-      const { data: { user } } = await supabase.auth.getUser()
+      // Get user info for watermark (user already fetched above)
       if (user) {
         setUserEmail(user.email || "User")
         setUserId(user.id.substring(0, 8))
         const ip = await getUserInfo()
         setUserIp(ip)
-      }
-      
-      // Log access
-      if (user) {
+        
+        // Log access
         await supabase.from('activity_logs').insert({
           user_id: user.id,
           action: 'viewed_case_file',
           details: { case_file_id: id },
-          ip_address: await getUserInfo(),
+          ip_address: ip,
           device_info: navigator.userAgent
         })
       }

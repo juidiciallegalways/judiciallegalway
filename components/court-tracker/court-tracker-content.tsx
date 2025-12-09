@@ -168,6 +168,9 @@ export function CourtTrackerContent({ initialCases = [] }: CourtTrackerContentPr
                           <DialogTitle className="font-serif text-2xl pr-8">
                             {courtCase.case_title || `${courtCase.petitioner} v. ${courtCase.respondent}`}
                           </DialogTitle>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            Case details and hearing information
+                          </p>
                         </DialogHeader>
                         <div className="grid gap-6 py-4">
                           <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">

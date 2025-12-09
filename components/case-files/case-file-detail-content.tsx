@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import { Lock, BookOpen, ShoppingBag, ArrowLeft, IndianRupee, Calendar, MapPin, FileText, Tag, CheckCircle2, Eye, Download, Share2 } from "lucide-react"
+import { Lock, BookOpen, ShoppingBag, ArrowLeft, IndianRupee, Calendar, MapPin, FileText, Tag, CheckCircle2, Eye, Download, Share2, Scale, Users, Gavel } from "lucide-react"
 
 export function CaseFileDetailContent({ caseFile }: { caseFile: any }) {
   const { addItem, items } = useCart()
@@ -195,6 +195,7 @@ export function CaseFileDetailContent({ caseFile }: { caseFile: any }) {
               <TabsList>
                 <TabsTrigger value="details">Case Details</TabsTrigger>
                 <TabsTrigger value="summary">Summary</TabsTrigger>
+                <TabsTrigger value="parties">Parties & Judge</TabsTrigger>
               </TabsList>
               <TabsContent value="details" className="mt-4">
                 <Card>
@@ -228,16 +229,96 @@ export function CaseFileDetailContent({ caseFile }: { caseFile: any }) {
                         <p className="text-sm text-muted-foreground">Pages</p>
                         <p className="font-medium">{caseFile.total_pages || 'N/A'}</p>
                       </div>
+                      {caseFile.judgment_date && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Judgment Date</p>
+                          <p className="font-medium">{new Date(caseFile.judgment_date).toLocaleDateString()}</p>
+                        </div>
+                      )}
+                      {caseFile.state && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">State</p>
+                          <p className="font-medium">{caseFile.state}</p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
               </TabsContent>
               <TabsContent value="summary" className="mt-4">
                 <Card>
-                  <CardContent className="p-6">
-                    <p className="text-muted-foreground leading-relaxed">
-                      {caseFile.description || 'No summary available.'}
-                    </p>
+                  <CardContent className="p-6 space-y-4">
+                    {caseFile.case_summary && (
+                      <div>
+                        <h4 className="font-semibold mb-2">Case Summary</h4>
+                        <p className="text-muted-foreground leading-relaxed">{caseFile.case_summary}</p>
+                      </div>
+                    )}
+                    {caseFile.description && (
+                      <div>
+                        <h4 className="font-semibold mb-2">Description</h4>
+                        <p className="text-muted-foreground leading-relaxed">{caseFile.description}</p>
+                      </div>
+                    )}
+                    {caseFile.key_points && caseFile.key_points.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold mb-2">Key Points</h4>
+                        <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                          {caseFile.key_points.map((point: string, i: number) => (
+                            <li key={i}>{point}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="parties" className="mt-4">
+                <Card>
+                  <CardContent className="p-6 space-y-6">
+                    {caseFile.petitioner && (
+                      <div className="flex items-start gap-3">
+                        <Users className="h-5 w-5 text-primary mt-0.5" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Petitioner</p>
+                          <p className="font-medium">{caseFile.petitioner}</p>
+                        </div>
+                      </div>
+                    )}
+                    {caseFile.respondent && (
+                      <div className="flex items-start gap-3">
+                        <Users className="h-5 w-5 text-accent mt-0.5" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Respondent</p>
+                          <p className="font-medium">{caseFile.respondent}</p>
+                        </div>
+                      </div>
+                    )}
+                    {caseFile.judge_name && (
+                      <div className="flex items-start gap-3">
+                        <Gavel className="h-5 w-5 text-amber-500 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Presiding Judge</p>
+                          <p className="font-medium">{caseFile.judge_name}</p>
+                          {caseFile.bench && (
+                            <p className="text-sm text-muted-foreground mt-1">Bench: {caseFile.bench}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {caseFile.advocate_names && caseFile.advocate_names.length > 0 && (
+                      <div className="flex items-start gap-3">
+                        <Scale className="h-5 w-5 text-blue-500 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Advocates</p>
+                          <ul className="mt-1 space-y-1">
+                            {caseFile.advocate_names.map((adv: string, i: number) => (
+                              <li key={i} className="font-medium">{adv}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

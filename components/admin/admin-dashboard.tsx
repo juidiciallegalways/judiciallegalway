@@ -48,7 +48,8 @@ export function AdminDashboard() {
   const [libForm, setLibForm] = useState({
     title: "", desc: "", caseNumber: "", courtName: "", category: "constitutional", 
     subcategory: "", year: new Date().getFullYear(), price: "0", totalPages: "10", 
-    isPremium: false, tags: "" 
+    isPremium: false, tags: "", judgeName: "", petitioner: "", respondent: "",
+    advocates: "", caseSummary: "", keyPoints: "", judgmentDate: "", bench: "", state: ""
   })
   
   const [bookForm, setBookForm] = useState({
@@ -70,12 +71,18 @@ export function AdminDashboard() {
         supabase.from('case_files').select('*').order('created_at', { ascending: false }),
         supabase.from('books').select('*').order('created_at', { ascending: false }),
         supabase.from('court_cases').select('*').order('updated_at', { ascending: false }),
+        // Use service role or bypass RLS for admin - fetch all profiles
         supabase.from('profiles').select('*').order('created_at', { ascending: false }),
         supabase.from('purchases').select('*').order('created_at', { ascending: false }),
         supabase.from('subscriptions').select('*').order('created_at', { ascending: false }),
         supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(100),
         supabase.from('saved_cases').select('*').order('created_at', { ascending: false })
       ])
+      
+      // Log for debugging
+      if (u.error) {
+        console.error("Users fetch error:", u.error)
+      }
       
       if (f.data) setCaseFiles(f.data)
       if (b.data) setBooks(b.data)
@@ -163,10 +170,19 @@ export function AdminDashboard() {
         price: Number(libForm.price),
         is_premium: libForm.isPremium,
         total_pages: Number(libForm.totalPages),
-        tags: libForm.tags.split(',').map(s => s.trim()),
+        tags: libForm.tags.split(',').map(s => s.trim()).filter(Boolean),
         file_path: path,
         is_published: true,
-        thumbnail_url: thumbnailUrl
+        thumbnail_url: thumbnailUrl,
+        judge_name: libForm.judgeName || null,
+        petitioner: libForm.petitioner || null,
+        respondent: libForm.respondent || null,
+        advocate_names: libForm.advocates ? libForm.advocates.split(',').map(s => s.trim()).filter(Boolean) : null,
+        case_summary: libForm.caseSummary || null,
+        key_points: libForm.keyPoints ? libForm.keyPoints.split(',').map(s => s.trim()).filter(Boolean) : null,
+        judgment_date: libForm.judgmentDate || null,
+        bench: libForm.bench || null,
+        state: libForm.state || null
       })
       if (error) throw error
       toast.success("Case File Published!")
@@ -175,7 +191,8 @@ export function AdminDashboard() {
       setLibForm({
         title: "", desc: "", caseNumber: "", courtName: "", category: "constitutional", 
         subcategory: "", year: new Date().getFullYear(), price: "0", totalPages: "10", 
-        isPremium: false, tags: ""
+        isPremium: false, tags: "", judgeName: "", petitioner: "", respondent: "",
+        advocates: "", caseSummary: "", keyPoints: "", judgmentDate: "", bench: "", state: ""
       })
       fetchData()
     } catch (e: any) { toast.error(e.message) }
@@ -365,12 +382,27 @@ export function AdminDashboard() {
                 <Input placeholder="Case Number" value={libForm.caseNumber} onChange={e => setLibForm({...libForm, caseNumber: e.target.value})} />
               </div>
               <Textarea placeholder="Description" value={libForm.desc} onChange={e => setLibForm({...libForm, desc: e.target.value})} />
+              <div className="grid grid-cols-2 gap-4">
+                <Input placeholder="Petitioner" value={libForm.petitioner} onChange={e => setLibForm({...libForm, petitioner: e.target.value})} />
+                <Input placeholder="Respondent" value={libForm.respondent} onChange={e => setLibForm({...libForm, respondent: e.target.value})} />
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <Input placeholder="Judge Name" value={libForm.judgeName} onChange={e => setLibForm({...libForm, judgeName: e.target.value})} />
+                <Input placeholder="Bench" value={libForm.bench} onChange={e => setLibForm({...libForm, bench: e.target.value})} />
+                <Input placeholder="State" value={libForm.state} onChange={e => setLibForm({...libForm, state: e.target.value})} />
+              </div>
               <div className="grid grid-cols-4 gap-4">
                 <Input type="number" placeholder="Year" value={libForm.year} onChange={e => setLibForm({...libForm, year: Number(e.target.value)})} />
                 <Input type="number" placeholder="Pages" value={libForm.totalPages} onChange={e => setLibForm({...libForm, totalPages: e.target.value})} />
                 <Input type="number" placeholder="Price" value={libForm.price} onChange={e => setLibForm({...libForm, price: e.target.value})} />
+                <Input type="date" placeholder="Judgment Date" value={libForm.judgmentDate} onChange={e => setLibForm({...libForm, judgmentDate: e.target.value})} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Input placeholder="Advocates (comma sep)" value={libForm.advocates} onChange={e => setLibForm({...libForm, advocates: e.target.value})} />
                 <Input placeholder="Tags (comma sep)" value={libForm.tags} onChange={e => setLibForm({...libForm, tags: e.target.value})} />
               </div>
+              <Textarea placeholder="Case Summary" value={libForm.caseSummary} onChange={e => setLibForm({...libForm, caseSummary: e.target.value})} rows={3} />
+              <Input placeholder="Key Points (comma sep)" value={libForm.keyPoints} onChange={e => setLibForm({...libForm, keyPoints: e.target.value})} />
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>PDF/Document File *</Label>

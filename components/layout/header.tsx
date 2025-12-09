@@ -13,6 +13,7 @@ import { ScalesIcon } from "@/components/icons/legal-icons"
 import { Menu, Sun, Moon, ChevronDown, User, LogOut, Scale, ShoppingBag, Settings, Bell, FileText } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
+import { useCart } from "@/contexts/cart-context" // Import Cart Context
 
 const navigation = [
   { name: "Home", href: "/", icon: null },
@@ -28,28 +29,19 @@ export function Header() {
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [notifications] = useState(3)
+  const { items } = useCart() // Get Cart Items
 
   useEffect(() => {
     setMounted(true)
-
     const supabase = createClient()
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user)
     })
 
-    let ticking = false
     const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setIsScrolled(window.scrollY > 10)
-          ticking = false
-        })
-        ticking = true
-      }
+      setIsScrolled(window.scrollY > 10)
     }
-    
-    window.addEventListener("scroll", handleScroll, { passive: true })
+    window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
@@ -64,235 +56,83 @@ export function Header() {
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         isScrolled ? "glass shadow-lg border-b" : "bg-background/80 backdrop-blur-sm"
       }`}
     >
       <nav className="container mx-auto flex h-16 items-center justify-between px-4 lg:px-8">
-        {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <motion.div 
-            className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary"
-            whileHover={{ scale: 1.05, rotate: 5 }}
-            transition={{ duration: 0.2 }}
-          >
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
             <ScalesIcon className="h-6 w-6 text-primary-foreground" />
-          </motion.div>
+          </div>
           <div className="hidden sm:block">
-            <div className="flex items-center gap-1">
-              <span className="font-serif text-lg font-bold text-primary group-hover:text-primary/80 transition-colors">
-                Judicially
-              </span>
-              <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">PRO</Badge>
-            </div>
+            <span className="font-serif text-lg font-bold text-primary block leading-none">Judicially</span>
             <span className="text-xs text-muted-foreground">Legal Ways</span>
           </div>
         </Link>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Nav */}
         <div className="hidden lg:flex lg:items-center lg:gap-1">
-          {navigation.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="relative px-4 py-2 group"
-              >
-                <span className={`text-sm font-medium transition-colors flex items-center gap-2 ${
-                  isActive ? "text-primary" : "text-foreground/70 hover:text-foreground"
-                }`}>
-                  {item.icon && <item.icon className="h-4 w-4" />}
-                  {item.name}
-                </span>
-                {isActive && (
-                  <motion.div
-                    layoutId="navbar-indicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                  />
-                )}
-                {!isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-                )}
-              </Link>
-            )
-          })}
+          {navigation.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`relative px-4 py-2 text-sm font-medium transition-colors ${
+                pathname === item.href ? "text-primary" : "text-foreground/70 hover:text-foreground"
+              }`}
+            >
+              {item.name}
+              {pathname === item.href && (
+                <motion.div layoutId="navbar-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+              )}
+            </Link>
+          ))}
         </div>
 
-        {/* Right Side Actions */}
+        {/* Actions */}
         <div className="flex items-center gap-2">
-          {/* Notifications */}
-          {user && (
-            <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
-              <Bell className="h-5 w-5" />
-              {notifications > 0 && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground"
-                >
-                  {notifications}
-                </motion.span>
+          {/* Universal Cart Button */}
+          <Button variant="ghost" size="icon" className="relative" asChild>
+            <Link href="/store/cart">
+              <ShoppingBag className="h-5 w-5" />
+              {items.length > 0 && (
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-600 animate-pulse" />
               )}
-            </Button>
-          )}
+            </Link>
+          </Button>
 
-          {/* Theme Toggle */}
-          {mounted && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              aria-label="Toggle theme"
-              className="relative overflow-hidden"
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={theme}
-                  initial={{ y: -20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: 20, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-                </motion.div>
-              </AnimatePresence>
-            </Button>
-          )}
-
-          {/* User Menu */}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 bg-transparent">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                <Button variant="outline" className="gap-2">
+                  <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center text-xs text-white">
                     {user.email?.[0].toUpperCase()}
                   </div>
-                  <span className="hidden sm:inline max-w-[100px] truncate">
-                    {user.email?.split('@')[0]}
-                  </span>
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium">{user.email}</p>
-                  <p className="text-xs text-muted-foreground">Free Plan</p>
-                </div>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild><Link href="/profile">Profile</Link></DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard" className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/profile" className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut} className="text-red-600">Sign Out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="hidden sm:flex sm:items-center sm:gap-2">
-              <Button variant="ghost" asChild>
-                <Link href="/auth/login">Sign In</Link>
-              </Button>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button asChild>
-                  <Link href="/auth/signup">Get Started</Link>
-                </Button>
-              </motion.div>
-            </div>
+            <Button asChild size="sm"><Link href="/auth/login">Sign In</Link></Button>
           )}
 
           {/* Mobile Menu Trigger */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Open menu</span>
-              </Button>
+              <Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0">
-              <div className="flex flex-col h-full">
-                <div className="p-6 border-b">
-                  <Link href="/" className="flex items-center gap-3" onClick={() => setMobileMenuOpen(false)}>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-                      <ScalesIcon className="h-6 w-6 text-primary-foreground" />
-                    </div>
-                    <div>
-                      <span className="font-serif text-lg font-bold text-primary block">Judicially</span>
-                      <span className="text-xs text-muted-foreground">Legal Ways</span>
-                    </div>
+            <SheetContent side="right">
+              <div className="flex flex-col gap-4 mt-8">
+                {navigation.map((item) => (
+                  <Link key={item.name} href={item.href} onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium">
+                    {item.name}
                   </Link>
-                </div>
-
-                <nav className="flex-1 px-4 py-6 overflow-y-auto">
-                  <div className="space-y-1">
-                    {navigation.map((item) => {
-                      const isActive = pathname === item.href
-                      return (
-                        <Link
-                          key={item.name}
-                          href={item.href}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all ${
-                            isActive 
-                              ? "bg-primary text-primary-foreground shadow-sm" 
-                              : "text-foreground/70 hover:bg-muted hover:text-foreground"
-                          }`}
-                        >
-                          {item.icon && <item.icon className="h-5 w-5 shrink-0" />}
-                          <span>{item.name}</span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </nav>
-
-                <div className="p-4 border-t bg-background">
-                  {user ? (
-                    <div className="flex flex-col gap-2">
-                      <Button variant="outline" asChild>
-                        <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                          <User className="mr-2 h-4 w-4" />
-                          Dashboard
-                        </Link>
-                      </Button>
-                      <Button variant="outline" asChild>
-                        <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
-                          <Settings className="mr-2 h-4 w-4" />
-                          Settings
-                        </Link>
-                      </Button>
-                      <Button variant="destructive" onClick={() => {
-                        handleSignOut()
-                        setMobileMenuOpen(false)
-                      }}>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Sign Out
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-2">
-                      <Button variant="outline" asChild>
-                        <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
-                      </Button>
-                      <Button asChild>
-                        <Link href="/auth/signup" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
-                      </Button>
-                    </div>
-                  )}
-                </div>
+                ))}
               </div>
             </SheetContent>
           </Sheet>

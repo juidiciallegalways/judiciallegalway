@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +22,8 @@ import {
   Award,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { useCart } from "@/contexts/cart-context"
+import { toast } from "sonner"
 
 interface Book {
   id: string
@@ -71,25 +74,60 @@ const relatedBooks = [
 ]
 
 export function BookDetailContent({ bookId }: { bookId: string }) {
-  const [book, setBook] = useState<Book>(demoBook)
-  const [quantity, setQuantity] = useState(1)
+  const router = useRouter()
+  const { addItem, items } = useCart()
+  const [book, setBook] = useState<Book | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [hasPurchased, setHasPurchased] = useState(false)
   const [isWishlisted, setIsWishlisted] = useState(false)
-  const [addedToCart, setAddedToCart] = useState(false)
+  const supabase = createClient()
 
   useEffect(() => {
     async function fetchBook() {
-      const supabase = createClient()
-      const { data } = await supabase.from("books").select("*").eq("id", bookId).single()
-      if (data) setBook(data)
+      const { data, error } = await supabase.from("books").select("*").eq("id", bookId).single()
+      if (error) {
+        toast.error("Book not found")
+        router.push("/store")
+        return
+      }
+      if (data) {
+        setBook(data)
+        
+        // Check if user has purchased
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: purchase } = await supabase
+            .from('purchases')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('item_type', 'book')
+            .eq('item_id', bookId)
+            .eq('payment_status', 'completed')
+            .single()
+          setHasPurchased(!!purchase || data.price === 0)
+        }
+      }
+      setLoading(false)
     }
-    if (bookId !== "1") fetchBook()
-  }, [bookId])
+    fetchBook()
+  }, [bookId, router, supabase])
 
-  const discount = Math.round((1 - book.price / book.original_price) * 100)
+  if (loading || !book) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  }
+
+  const discount = book.original_price ? Math.round((1 - book.price / book.original_price) * 100) : 0
+  const inCart = items.some(item => item.id === book.id && item.type === 'book')
 
   const handleAddToCart = () => {
-    setAddedToCart(true)
-    setTimeout(() => setAddedToCart(false), 3000)
+    addItem({
+      id: book.id,
+      title: book.title,
+      price: book.price,
+      type: 'book',
+      cover_url: book.cover_url || undefined
+    })
+    toast.success("Added to cart")
   }
 
   return (
@@ -218,35 +256,55 @@ export function BookDetailContent({ bookId }: { bookId: string }) {
               </div>
 
               <div className="flex gap-3">
-                <Button size="lg" className="flex-1 gap-2" onClick={handleAddToCart}>
-                  {addedToCart ? (
-                    <>
-                      <CheckCircle2 className="h-5 w-5" />
-                      Added to Cart
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart className="h-5 w-5" />
-                      Add to Cart
-                    </>
-                  )}
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="gap-2 bg-transparent"
-                  onClick={() => setIsWishlisted(!isWishlisted)}
-                >
-                  <Heart className={`h-5 w-5 ${isWishlisted ? "fill-destructive text-destructive" : ""}`} />
-                </Button>
-                <Button size="lg" variant="outline">
-                  <Share2 className="h-5 w-5" />
-                </Button>
+                {hasPurchased ? (
+                  <Button size="lg" className="flex-1 gap-2" asChild>
+                    <Link href={`/store/read/${book.id}`}>
+                      <BookOpen className="h-5 w-5" />
+                      Read Now
+                    </Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button 
+                      size="lg" 
+                      className="flex-1 gap-2" 
+                      onClick={handleAddToCart}
+                      disabled={inCart || book.stock === 0}
+                    >
+                      {inCart ? (
+                        <>
+                          <CheckCircle2 className="h-5 w-5" />
+                          In Cart
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="h-5 w-5" />
+                          {book.stock === 0 ? "Sold Out" : "Add to Cart"}
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="gap-2 bg-transparent"
+                      onClick={() => setIsWishlisted(!isWishlisted)}
+                    >
+                      <Heart className={`h-5 w-5 ${isWishlisted ? "fill-destructive text-destructive" : ""}`} />
+                    </Button>
+                    <Button size="lg" variant="outline" asChild>
+                      <Link href="/store/cart">
+                        <Share2 className="h-5 w-5" />
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
 
-              <Button size="lg" variant="secondary" className="w-full">
-                Buy Now
-              </Button>
+              {!hasPurchased && book.stock > 0 && (
+                <Button size="lg" variant="secondary" className="w-full" asChild>
+                  <Link href="/store/cart">View Cart</Link>
+                </Button>
+              )}
             </div>
 
             {/* Features */}

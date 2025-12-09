@@ -10,8 +10,10 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Loader2, UploadCloud, FileText, Trash2, RefreshCw, BookOpen, Scale } from "lucide-react"
+import { Loader2, UploadCloud, FileText, Trash2, RefreshCw, BookOpen, Scale, Users, ShoppingBag, Activity, CreditCard, TrendingUp } from "lucide-react"
 
 export function AdminDashboard() {
   const supabase = createClient()
@@ -24,8 +26,23 @@ export function AdminDashboard() {
   const [caseFiles, setCaseFiles] = useState<any[]>([])
   const [books, setBooks] = useState<any[]>([])
   const [courtCases, setCourtCases] = useState<any[]>([])
+  const [users, setUsers] = useState<any[]>([])
+  const [purchases, setPurchases] = useState<any[]>([])
+  const [subscriptions, setSubscriptions] = useState<any[]>([])
+  const [activityLogs, setActivityLogs] = useState<any[]>([])
+  const [savedCases, setSavedCases] = useState<any[]>([])
 
-  // --- FULL FORMS (MATCHING DB SCHEMA) ---
+  // Stats
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalPurchases: 0,
+    totalRevenue: 0,
+    totalCaseFiles: 0,
+    totalBooks: 0,
+    totalCourtCases: 0
+  })
+
+  // Forms
   const [libForm, setLibForm] = useState({
     title: "", desc: "", caseNumber: "", courtName: "", category: "constitutional", 
     subcategory: "", year: new Date().getFullYear(), price: "0", totalPages: "10", 
@@ -46,16 +63,52 @@ export function AdminDashboard() {
   // Fetch Data
   const fetchData = async () => {
     setIsLoading(true)
-    const [f, b, c] = await Promise.all([
-      supabase.from('case_files').select('*').order('created_at', { ascending: false }),
-      supabase.from('books').select('*').order('created_at', { ascending: false }),
-      supabase.from('court_cases').select('*').order('updated_at', { ascending: false })
-    ])
-    if (f.data) setCaseFiles(f.data)
-    if (b.data) setBooks(b.data)
-    if (c.data) setCourtCases(c.data)
-    setIsLoading(false)
+    try {
+      const [f, b, c, u, p, s, a, sc] = await Promise.all([
+        supabase.from('case_files').select('*').order('created_at', { ascending: false }),
+        supabase.from('books').select('*').order('created_at', { ascending: false }),
+        supabase.from('court_cases').select('*').order('updated_at', { ascending: false }),
+        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+        supabase.from('purchases').select('*').order('created_at', { ascending: false }),
+        supabase.from('subscriptions').select('*').order('created_at', { ascending: false }),
+        supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(100),
+        supabase.from('saved_cases').select('*').order('created_at', { ascending: false })
+      ])
+      
+      if (f.data) setCaseFiles(f.data)
+      if (b.data) setBooks(b.data)
+      if (c.data) setCourtCases(c.data)
+      if (u.data) setUsers(u.data)
+      if (p.data) {
+        setPurchases(p.data)
+        const revenue = p.data
+          .filter((p: any) => p.payment_status === 'completed')
+          .reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0)
+        setStats(prev => ({
+          ...prev,
+          totalPurchases: p.data.length,
+          totalRevenue: revenue
+        }))
+      }
+      if (s.data) setSubscriptions(s.data)
+      if (a.data) setActivityLogs(a.data)
+      if (sc.data) setSavedCases(sc.data)
+
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        totalUsers: u.data?.length || 0,
+        totalCaseFiles: f.data?.length || 0,
+        totalBooks: b.data?.length || 0,
+        totalCourtCases: c.data?.length || 0
+      }))
+    } catch (error: any) {
+      toast.error("Failed to fetch data: " + error.message)
+    } finally {
+      setIsLoading(false)
+    }
   }
+
   useEffect(() => { fetchData() }, [])
 
   // Upload Logic
@@ -66,7 +119,7 @@ export function AdminDashboard() {
     return `case-files/${fileName}`
   }
 
-  // 1. LIBRARY UPLOAD (FULL FIELDS)
+  // 1. LIBRARY UPLOAD
   const handleLibUpload = async () => {
     if (!file || !libForm.title) return toast.error("File & Title required")
     setUploading(true)
@@ -83,20 +136,25 @@ export function AdminDashboard() {
         price: Number(libForm.price),
         is_premium: libForm.isPremium,
         total_pages: Number(libForm.totalPages),
-        tags: libForm.tags.split(',').map(s => s.trim()), // Convert string to text[]
-        file_url: path, 
+        tags: libForm.tags.split(',').map(s => s.trim()),
+        file_path: path,
         is_published: true,
         thumbnail_url: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800"
       })
       if (error) throw error
       toast.success("Case File Published!")
       setFile(null)
+      setLibForm({
+        title: "", desc: "", caseNumber: "", courtName: "", category: "constitutional", 
+        subcategory: "", year: new Date().getFullYear(), price: "0", totalPages: "10", 
+        isPremium: false, tags: ""
+      })
       fetchData()
     } catch (e: any) { toast.error(e.message) }
     finally { setUploading(false) }
   }
 
-  // 2. BOOK UPLOAD (FULL FIELDS)
+  // 2. BOOK UPLOAD
   const handleBookUpload = async () => {
     if (!file || !bookForm.title) return toast.error("File & Title required")
     setUploading(true)
@@ -120,12 +178,16 @@ export function AdminDashboard() {
       if (error) throw error
       toast.success("Book Published!")
       setFile(null)
+      setBookForm({
+        title: "", author: "", desc: "", price: "0", originalPrice: "0", 
+        stock: "100", category: "law_notes", isbn: "", publisher: "", pages: "200"
+      })
       fetchData()
     } catch (e: any) { toast.error(e.message) }
     finally { setUploading(false) }
   }
 
-  // 3. COURT UPDATE (FULL FIELDS)
+  // 3. COURT UPDATE
   const handleCourtUpdate = async () => {
     if (!courtForm.caseNumber) return toast.error("Case Number required")
     setUploading(true)
@@ -145,29 +207,116 @@ export function AdminDashboard() {
       })
       if (error) throw error
       toast.success("Case Updated!")
+      setCourtForm({
+        caseNumber: "", petitioner: "", respondent: "", courtName: "Supreme Court of India", 
+        courtType: "Supreme Court", state: "Delhi", judgeName: "", status: "pending", 
+        nextHearing: "", advocates: ""
+      })
       fetchData()
     } catch (e: any) { toast.error(e.message) }
     finally { setUploading(false) }
   }
 
   const deleteItem = async (table: string, id: string) => {
-    if(!confirm("Delete?")) return
-    await supabase.from(table).delete().eq('id', id)
-    fetchData()
+    if(!confirm("Delete this item?")) return
+    const { error } = await supabase.from(table).delete().eq('id', id)
+    if (error) {
+      toast.error("Delete failed: " + error.message)
+    } else {
+      toast.success("Deleted successfully")
+      fetchData()
+    }
+  }
+
+  const updateUserRole = async (userId: string, newRole: string) => {
+    const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId)
+    if (error) {
+      toast.error("Update failed: " + error.message)
+    } else {
+      toast.success("Role updated")
+      fetchData()
+    }
+  }
+
+  if (isLoading) {
+    return <div className="container mx-auto py-20 text-center"><Loader2 className="animate-spin mx-auto" /></div>
   }
 
   return (
-    <div className="container mx-auto py-10 max-w-6xl">
+    <div className="container mx-auto py-10 max-w-7xl">
       <div className="flex justify-between mb-8">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         <Button variant="outline" onClick={fetchData}><RefreshCw className="w-4 h-4 mr-2"/> Refresh</Button>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="h-5 w-5 text-primary" />
+              <span className="text-sm text-muted-foreground">Users</span>
+            </div>
+            <p className="text-2xl font-bold">{stats.totalUsers}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <ShoppingBag className="h-5 w-5 text-green-500" />
+              <span className="text-sm text-muted-foreground">Purchases</span>
+            </div>
+            <p className="text-2xl font-bold">{stats.totalPurchases}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-5 w-5 text-green-500" />
+              <span className="text-sm text-muted-foreground">Revenue</span>
+            </div>
+            <p className="text-2xl font-bold">₹{stats.totalRevenue.toFixed(2)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="h-5 w-5 text-blue-500" />
+              <span className="text-sm text-muted-foreground">Case Files</span>
+            </div>
+            <p className="text-2xl font-bold">{stats.totalCaseFiles}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <BookOpen className="h-5 w-5 text-purple-500" />
+              <span className="text-sm text-muted-foreground">Books</span>
+            </div>
+            <p className="text-2xl font-bold">{stats.totalBooks}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Scale className="h-5 w-5 text-orange-500" />
+              <span className="text-sm text-muted-foreground">Court Cases</span>
+            </div>
+            <p className="text-2xl font-bold">{stats.totalCourtCases}</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="library">Library</TabsTrigger>
-          <TabsTrigger value="books">Book Store</TabsTrigger>
-          <TabsTrigger value="court">Court Updates</TabsTrigger>
+          <TabsTrigger value="books">Books</TabsTrigger>
+          <TabsTrigger value="court">Court</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="purchases">Purchases</TabsTrigger>
+          <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsTrigger value="saved">Saved</TabsTrigger>
         </TabsList>
 
         {/* LIBRARY TAB */}
@@ -179,7 +328,7 @@ export function AdminDashboard() {
                 <Input placeholder="Title" value={libForm.title} onChange={e => setLibForm({...libForm, title: e.target.value})} />
                 <Input placeholder="Case Number" value={libForm.caseNumber} onChange={e => setLibForm({...libForm, caseNumber: e.target.value})} />
               </div>
-              <Input placeholder="Subcategory" value={libForm.subcategory} onChange={e => setLibForm({...libForm, subcategory: e.target.value})} />
+              <Textarea placeholder="Description" value={libForm.desc} onChange={e => setLibForm({...libForm, desc: e.target.value})} />
               <div className="grid grid-cols-4 gap-4">
                 <Input type="number" placeholder="Year" value={libForm.year} onChange={e => setLibForm({...libForm, year: Number(e.target.value)})} />
                 <Input type="number" placeholder="Pages" value={libForm.totalPages} onChange={e => setLibForm({...libForm, totalPages: e.target.value})} />
@@ -190,10 +339,43 @@ export function AdminDashboard() {
               <Button onClick={handleLibUpload} disabled={uploading}>{uploading ? "Uploading..." : "Publish"}</Button>
             </div>
           </Card>
-          {/* Table */}
-          <div className="border rounded p-4">
-             {caseFiles.map(f => <div key={f.id} className="flex justify-between py-2 border-b">{f.title} <Button size="sm" variant="ghost" onClick={() => deleteItem('case_files', f.id)}><Trash2 className="w-4 h-4 text-red-500"/></Button></div>)}
-          </div>
+          <Card>
+            <CardHeader><CardTitle>Case Files ({caseFiles.length})</CardTitle></CardHeader>
+            <CardContent>
+              <div className="border rounded">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Case #</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {caseFiles.map(f => (
+                      <TableRow key={f.id}>
+                        <TableCell>{f.title}</TableCell>
+                        <TableCell className="font-mono text-xs">{f.case_number || 'N/A'}</TableCell>
+                        <TableCell>₹{f.price || 0}</TableCell>
+                        <TableCell>
+                          <Badge variant={f.is_published ? "default" : "secondary"}>
+                            {f.is_published ? "Published" : "Draft"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="ghost" onClick={() => deleteItem('case_files', f.id)}>
+                            <Trash2 className="w-4 h-4 text-red-500"/>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* BOOKS TAB */}
@@ -205,14 +387,59 @@ export function AdminDashboard() {
                    <Input placeholder="Title" value={bookForm.title} onChange={e => setBookForm({...bookForm, title: e.target.value})} />
                    <Input placeholder="Author" value={bookForm.author} onChange={e => setBookForm({...bookForm, author: e.target.value})} />
                 </div>
+                <Textarea placeholder="Description" value={bookForm.desc} onChange={e => setBookForm({...bookForm, desc: e.target.value})} />
                 <div className="grid grid-cols-3 gap-4">
                    <Input placeholder="ISBN" value={bookForm.isbn} onChange={e => setBookForm({...bookForm, isbn: e.target.value})} />
                    <Input placeholder="Publisher" value={bookForm.publisher} onChange={e => setBookForm({...bookForm, publisher: e.target.value})} />
                    <Input type="number" placeholder="Pages" value={bookForm.pages} onChange={e => setBookForm({...bookForm, pages: e.target.value})} />
                 </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <Input type="number" placeholder="Price" value={bookForm.price} onChange={e => setBookForm({...bookForm, price: e.target.value})} />
+                  <Input type="number" placeholder="Original Price" value={bookForm.originalPrice} onChange={e => setBookForm({...bookForm, originalPrice: e.target.value})} />
+                  <Input type="number" placeholder="Stock" value={bookForm.stock} onChange={e => setBookForm({...bookForm, stock: e.target.value})} />
+                </div>
                 <Input type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
                 <Button onClick={handleBookUpload} disabled={uploading}>Publish Book</Button>
              </div>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Books ({books.length})</CardTitle></CardHeader>
+            <CardContent>
+              <div className="border rounded">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Author</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Stock</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {books.map(b => (
+                      <TableRow key={b.id}>
+                        <TableCell>{b.title}</TableCell>
+                        <TableCell>{b.author}</TableCell>
+                        <TableCell>₹{b.price || 0}</TableCell>
+                        <TableCell>{b.stock || 0}</TableCell>
+                        <TableCell>
+                          <Badge variant={b.is_published ? "default" : "secondary"}>
+                            {b.is_published ? "Published" : "Draft"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="ghost" onClick={() => deleteItem('books', b.id)}>
+                            <Trash2 className="w-4 h-4 text-red-500"/>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
 
@@ -232,17 +459,238 @@ export function AdminDashboard() {
                   <Input placeholder="Advocates (comma sep)" value={courtForm.advocates} onChange={e => setCourtForm({...courtForm, advocates: e.target.value})} />
                </div>
                <div className="grid grid-cols-2 gap-4">
-                  <select className="border p-2 rounded" value={courtForm.status} onChange={e => setCourtForm({...courtForm, status: e.target.value})}>
-                     <option value="pending">Pending</option><option value="hearing_today">Hearing Today</option>
-                  </select>
+                  <Select value={courtForm.status} onValueChange={(v) => setCourtForm({...courtForm, status: v})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="hearing_today">Hearing Today</SelectItem>
+                      <SelectItem value="disposed">Disposed</SelectItem>
+                      <SelectItem value="adjourned">Adjourned</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Input type="date" value={courtForm.nextHearing} onChange={e => setCourtForm({...courtForm, nextHearing: e.target.value})} />
                </div>
                <Button onClick={handleCourtUpdate} disabled={uploading}>Post Update</Button>
              </div>
            </Card>
-           <div className="border rounded p-4">
-             {courtCases.map(c => <div key={c.id} className="flex justify-between py-2 border-b">{c.case_number} ({c.status}) <Button size="sm" variant="ghost" onClick={() => deleteItem('court_cases', c.id)}><Trash2 className="w-4 h-4 text-red-500"/></Button></div>)}
-           </div>
+           <Card>
+            <CardHeader><CardTitle>Court Cases ({courtCases.length})</CardTitle></CardHeader>
+            <CardContent>
+              <div className="border rounded">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Case #</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Court</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {courtCases.map(c => (
+                      <TableRow key={c.id}>
+                        <TableCell className="font-mono text-xs">{c.case_number}</TableCell>
+                        <TableCell>{c.case_title || 'N/A'}</TableCell>
+                        <TableCell>{c.court_name}</TableCell>
+                        <TableCell>
+                          <Badge>{c.status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="ghost" onClick={() => deleteItem('court_cases', c.id)}>
+                            <Trash2 className="w-4 h-4 text-red-500"/>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* USERS TAB */}
+        <TabsContent value="users" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader><CardTitle>Users ({users.length})</CardTitle></CardHeader>
+            <CardContent>
+              <div className="border rounded">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map(u => (
+                      <TableRow key={u.id}>
+                        <TableCell>{u.email}</TableCell>
+                        <TableCell>{u.full_name || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Select value={u.role || 'student'} onValueChange={(v) => updateUserRole(u.id, v)}>
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="student">Student</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>{new Date(u.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="ghost" onClick={() => deleteItem('profiles', u.id)}>
+                            <Trash2 className="w-4 h-4 text-red-500"/>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* PURCHASES TAB */}
+        <TabsContent value="purchases" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader><CardTitle>Purchases ({purchases.length})</CardTitle></CardHeader>
+            <CardContent>
+              <div className="border rounded">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Item Type</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {purchases.map(p => (
+                      <TableRow key={p.id}>
+                        <TableCell className="text-xs">{p.user_id?.substring(0, 8)}...</TableCell>
+                        <TableCell><Badge variant="outline">{p.item_type}</Badge></TableCell>
+                        <TableCell>₹{p.amount || 0}</TableCell>
+                        <TableCell>
+                          <Badge variant={p.payment_status === 'completed' ? 'default' : 'secondary'}>
+                            {p.payment_status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(p.created_at).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* SUBSCRIPTIONS TAB */}
+        <TabsContent value="subscriptions" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader><CardTitle>Subscriptions ({subscriptions.length})</CardTitle></CardHeader>
+            <CardContent>
+              <div className="border rounded">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Plan</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>End Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {subscriptions.map(s => (
+                      <TableRow key={s.id}>
+                        <TableCell className="text-xs">{s.user_id?.substring(0, 8)}...</TableCell>
+                        <TableCell><Badge>{s.plan_type}</Badge></TableCell>
+                        <TableCell>₹{s.amount || 0}</TableCell>
+                        <TableCell>
+                          <Badge variant={s.status === 'active' ? 'default' : 'secondary'}>
+                            {s.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(s.end_date).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ACTIVITY TAB */}
+        <TabsContent value="activity" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader><CardTitle>Activity Logs ({activityLogs.length})</CardTitle></CardHeader>
+            <CardContent>
+              <div className="border rounded max-h-96 overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Action</TableHead>
+                      <TableHead>IP</TableHead>
+                      <TableHead>Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {activityLogs.map(a => (
+                      <TableRow key={a.id}>
+                        <TableCell className="text-xs">{a.user_id?.substring(0, 8)}...</TableCell>
+                        <TableCell>{a.action}</TableCell>
+                        <TableCell className="text-xs font-mono">{a.ip_address || 'N/A'}</TableCell>
+                        <TableCell>{new Date(a.created_at).toLocaleString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* SAVED CASES TAB */}
+        <TabsContent value="saved" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader><CardTitle>Saved Cases ({savedCases.length})</CardTitle></CardHeader>
+            <CardContent>
+              <div className="border rounded">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Case ID</TableHead>
+                      <TableHead>Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {savedCases.map(sc => (
+                      <TableRow key={sc.id}>
+                        <TableCell className="text-xs">{sc.user_id?.substring(0, 8)}...</TableCell>
+                        <TableCell className="font-mono text-xs">{sc.case_id?.substring(0, 8)}...</TableCell>
+                        <TableCell>{new Date(sc.created_at).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

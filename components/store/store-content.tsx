@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookLawIcon } from "@/components/icons/legal-icons"
 import { Search, ShoppingCart, Star, IndianRupee, Package, Heart, Eye, TrendingUp, Check, BookOpen } from "lucide-react"
 import { toast } from "sonner"
+import { useCart } from "@/contexts/cart-context"
 
 // Matches your 'public.books' table schema
 export interface Book {
@@ -39,12 +41,14 @@ interface StoreContentProps {
 const categories = ["All", "Criminal Law", "Civil Law", "Constitutional Law", "Evidence Law", "Bundle"]
 
 export function StoreContent({ initialBooks = [] }: StoreContentProps) {
+  const router = useRouter()
+  const { items, addItem, cartTotal } = useCart()
+  
   // 1. Initialize with Server Data
   const [books] = useState<Book[]>(initialBooks)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [sortBy, setSortBy] = useState("popular")
-  const [cart, setCart] = useState<Map<string, number>>(new Map())
   const [wishlist, setWishlist] = useState<Set<string>>(new Set())
 
   // 2. Filter Logic
@@ -72,13 +76,14 @@ export function StoreContent({ initialBooks = [] }: StoreContentProps) {
   })
 
   // 4. Cart & Wishlist Handlers
-  const addToCart = (bookId: string, title: string) => {
-    setCart((prev) => {
-      const next = new Map(prev)
-      next.set(bookId, (next.get(bookId) || 0) + 1)
-      return next
+  const handleAddToCart = (book: Book) => {
+    addItem({
+      id: book.id,
+      title: book.title,
+      price: book.price,
+      type: 'book',
+      cover_url: book.cover_url || undefined
     })
-    toast.success(`Added "${title}" to Cart`)
   }
 
   const toggleWishlist = (bookId: string) => {
@@ -95,17 +100,12 @@ export function StoreContent({ initialBooks = [] }: StoreContentProps) {
     })
   }
 
-  const cartTotal = Array.from(cart.entries()).reduce((total, [bookId, qty]) => {
-    const book = books.find((b) => b.id === bookId)
-    return total + (book?.price || 0) * qty
-  }, 0)
-
-  const cartItemCount = Array.from(cart.values()).reduce((a, b) => a + b, 0)
+  const cartItemCount = items.length
 
   // 5. Book Card Component
   const BookCard = ({ book }: { book: Book }) => {
     const discount = book.original_price ? Math.round((1 - book.price / book.original_price) * 100) : 0
-    const inCart = cart.has(book.id)
+    const inCart = items.some(item => item.id === book.id && item.type === 'book')
 
     return (
       <motion.div
@@ -213,8 +213,8 @@ export function StoreContent({ initialBooks = [] }: StoreContentProps) {
             <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button 
                 className="w-full gap-2" 
-                onClick={() => addToCart(book.id, book.title)}
-                disabled={book.stock === 0}
+                onClick={() => handleAddToCart(book)}
+                disabled={book.stock === 0 || inCart}
                 variant={inCart ? "secondary" : "default"}
               >
                 {inCart ? (
@@ -248,10 +248,12 @@ export function StoreContent({ initialBooks = [] }: StoreContentProps) {
         </div>
 
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <Button variant="outline" className="gap-2 bg-transparent relative">
-            <ShoppingCart className="h-5 w-5" />
-            Cart ({cartItemCount})
-            {cartTotal > 0 && <Badge variant="secondary" className="ml-1">₹{cartTotal}</Badge>}
+          <Button variant="outline" className="gap-2 bg-transparent relative" asChild>
+            <Link href="/store/cart">
+              <ShoppingCart className="h-5 w-5" />
+              Cart ({cartItemCount})
+              {cartTotal > 0 && <Badge variant="secondary" className="ml-1">₹{cartTotal}</Badge>}
+            </Link>
           </Button>
         </motion.div>
       </motion.div>

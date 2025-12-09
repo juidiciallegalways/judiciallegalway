@@ -10,8 +10,10 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { BookLawIcon } from "@/components/icons/legal-icons"
-import { Search, Filter, BookOpen, Lock, ArrowRight, IndianRupee, X, TrendingUp, Star } from "lucide-react"
+import { Search, Filter, BookOpen, Lock, ArrowRight, IndianRupee, X, TrendingUp, Star, ShoppingCart } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { useCart } from "@/contexts/cart-context"
+import { toast } from "sonner"
 
 export interface CaseFile {
   id: string
@@ -43,6 +45,8 @@ const categories = [
 ]
 
 export function CaseFilesContent({ initialCaseFiles }: CaseFilesContentProps) {
+  const { addItem } = useCart()
+  
   // Initialize with Server Data
   const [caseFiles] = useState<CaseFile[]>(initialCaseFiles)
   
@@ -50,6 +54,17 @@ export function CaseFilesContent({ initialCaseFiles }: CaseFilesContentProps) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [sortBy, setSortBy] = useState("popular")
   const [showPremiumOnly, setShowPremiumOnly] = useState(false)
+
+  const handleAddToCart = (caseFile: CaseFile) => {
+    addItem({
+      id: caseFile.id,
+      title: caseFile.title,
+      price: caseFile.price,
+      type: 'case_file',
+      cover_url: caseFile.thumbnail_url || undefined
+    })
+    toast.success("Added to cart")
+  }
 
   const filteredCaseFiles = caseFiles.filter((c) => {
     const matchesSearch = 
@@ -236,12 +251,22 @@ export function CaseFilesContent({ initialCaseFiles }: CaseFilesContentProps) {
                       </div>
                     </CardContent>
 
-                    <CardFooter className="p-5 pt-0">
-                      <Button className="w-full gap-2" asChild>
-                        <Link href={`/reader/${caseFile.id}`}>
+                    <CardFooter className="p-5 pt-0 flex gap-2">
+                      <Button className="flex-1 gap-2" asChild>
+                        <Link href={`/case-files/${caseFile.id}`}>
                            View Details <ArrowRight className="h-4 w-4" />
                         </Link>
                       </Button>
+                      {caseFile.price > 0 && (
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => handleAddToCart(caseFile)}
+                          className="gap-2"
+                        >
+                          <ShoppingCart className="h-4 w-4" />
+                        </Button>
+                      )}
                     </CardFooter>
                   </Card>
                 </motion.div>

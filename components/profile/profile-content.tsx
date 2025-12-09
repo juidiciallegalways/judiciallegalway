@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { BookLawIcon, ScalesIcon } from "@/components/icons/legal-icons"
-import { BookOpen, Bookmark, Clock, LogOut, Edit2, Save, Award } from "lucide-react"
+import { BookOpen, Bookmark, Clock, LogOut, Edit2, Save, Award, FileText } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 
@@ -37,9 +37,10 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
     full_name: profile?.full_name || "",
     phone: profile?.phone || "",
   })
-  const [purchases, setPurchases] = useState<{ id: string; item_type: string; amount: number; created_at: string }[]>(
+  const [purchases, setPurchases] = useState<{ id: string; item_type: string; item_id: string; amount: number; created_at: string }[]>(
     [],
   )
+  const [purchasedItems, setPurchasedItems] = useState<{ id: string; title: string; type: string; link: string }[]>([])
   const [savedCases, setSavedCases] = useState<{ id: string; case_id: string }[]>([])
   const [progress, setProgress] = useState<{ material_id: string; current_page: number; total_pages: number }[]>([])
   const [activityLogs, setActivityLogs] = useState<{ id: string; action: string; created_at: string }[]>([])
@@ -54,8 +55,8 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
           .from("purchases")
           .select("*")
           .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(10),
+          .eq("payment_status", "completed")
+          .order("created_at", { ascending: false }),
         supabase.from("saved_cases").select("*").eq("user_id", user.id),
         supabase.from("user_progress").select("*").eq("user_id", user.id),
         supabase
@@ -72,6 +73,35 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
       setProgress(progressRes.data || [])
       setActivityLogs(logsRes.data || [])
       setSubscription(subRes.data)
+
+      // Fetch purchased items details
+      if (purchasesRes.data && purchasesRes.data.length > 0) {
+        const items: { id: string; title: string; type: string; link: string }[] = []
+        
+        for (const purchase of purchasesRes.data) {
+          if (purchase.item_type === 'book') {
+            const { data: book } = await supabase
+              .from('books')
+              .select('id, title')
+              .eq('id', purchase.item_id)
+              .single()
+            if (book) {
+              items.push({ id: book.id, title: book.title, type: 'book', link: `/store/read/${book.id}` })
+            }
+          } else if (purchase.item_type === 'case_file') {
+            const { data: caseFile } = await supabase
+              .from('case_files')
+              .select('id, title')
+              .eq('id', purchase.item_id)
+              .single()
+            if (caseFile) {
+              items.push({ id: caseFile.id, title: caseFile.title, type: 'case_file', link: `/reader/${caseFile.id}` })
+            }
+          }
+        }
+        
+        setPurchasedItems(items)
+      }
     }
     fetchUserData()
   }, [user.id])
@@ -262,24 +292,43 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
             <TabsContent value="purchases">
               <Card>
                 <CardHeader>
-                  <CardTitle>Purchase History</CardTitle>
+                  <CardTitle>My Library</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {purchases.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">No purchases yet</p>
+                  {purchasedItems.length === 0 ? (
+                    <div className="text-center py-8">
+                      <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground mb-4">No purchased items yet</p>
+                      <Button variant="outline" asChild>
+                        <Link href="/store">Browse Store</Link>
+                      </Button>
+                    </div>
                   ) : (
                     <div className="space-y-4">
-                      {purchases.map((purchase) => (
-                        <div key={purchase.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-                          <div>
-                            <p className="font-medium text-foreground capitalize">
-                              {purchase.item_type.replace("_", " ")}
-                            </p>
+                      {purchasedItems.map((item) => (
+                        <div key={item.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              {item.type === 'book' ? (
+                                <BookOpen className="h-4 w-4 text-primary" />
+                              ) : (
+                                <FileText className="h-4 w-4 text-accent" />
+                              )}
+                              <p className="font-medium text-foreground">{item.title}</p>
+                              <Badge variant="outline" className="text-xs capitalize">
+                                {item.type.replace('_', ' ')}
+                              </Badge>
+                            </div>
                             <p className="text-sm text-muted-foreground">
-                              {new Date(purchase.created_at).toLocaleDateString()}
+                              Purchased on {new Date(purchases.find(p => p.item_id === item.id)?.created_at || '').toLocaleDateString()}
                             </p>
                           </div>
-                          <span className="font-bold text-foreground">₹{purchase.amount}</span>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={item.link}>
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Read
+                            </Link>
+                          </Button>
                         </div>
                       ))}
                     </div>

@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next"
 import { Inter, Poppins } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
-import { CartProvider } from "@/contexts/cart-context" // <--- IMPORT THIS
+import { CartProvider } from "@/contexts/cart-context"
+import { AuthProvider } from "@/contexts/auth-context"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
@@ -25,10 +26,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${poppins.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          {/* WRAP THE APP IN CART PROVIDER */}
-          <CartProvider>
-            {children}
-          </CartProvider>
+          <AuthProvider>
+            <CartProvider>
+              {children}
+            </CartProvider>
+          </AuthProvider>
           <Toaster />
         </ThemeProvider>
         <Analytics />

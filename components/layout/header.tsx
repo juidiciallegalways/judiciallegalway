@@ -4,15 +4,14 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
 import { usePathname } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
 import { ScalesIcon } from "@/components/icons/legal-icons"
-import { Menu, Sun, Moon, ChevronDown, User, LogOut, Scale, ShoppingBag, Settings, Bell, FileText } from "lucide-react"
+import { Menu, Sun, Moon, ChevronDown, User, LogOut, Scale, ShoppingBag, Settings, FileText } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import type { User as SupabaseUser } from "@supabase/supabase-js"
+import { useAuth } from "@/contexts/auth-context"
 import { useCart } from "@/contexts/cart-context"
 
 const navigation = [
@@ -26,62 +25,26 @@ export function Header() {
   const { theme, setTheme } = useTheme()
   const pathname = usePathname()
   const [mounted, setMounted] = useState(false)
-  const [user, setUser] = useState<SupabaseUser | null>(null)
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { items } = useCart()
+  const { user, isLoading } = useAuth()
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+  }
 
   useEffect(() => {
     setMounted(true)
-    const supabase = createClient()
-    
-    // Get initial user with retry
-    async function getInitialUser() {
-      try {
-        const { data, error } = await supabase.auth.getUser()
-        if (data?.user) {
-          setUser(data.user)
-        } else if (error) {
-          console.error("Auth error:", error)
-        }
-      } catch (err) {
-        console.error("Failed to get user:", err)
-      }
-    }
-    getInitialUser()
-
-    // Listen to auth state changes - NO PAGE RELOADS
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // Only update state - never reload page
-      setUser(session?.user ?? null)
-      
-      // Only redirect on explicit sign out
-      if (event === 'SIGNED_OUT' && !session) {
-        // Small delay then redirect
-        setTimeout(() => {
-          window.location.href = '/'
-        }, 200)
-      }
-    })
 
     const handleScroll = () => setIsScrolled(window.scrollY > 10)
     window.addEventListener("scroll", handleScroll)
     
     return () => {
-      subscription.unsubscribe()
       window.removeEventListener("scroll", handleScroll)
     }
   }, [])
-
-  const handleSignOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    setUser(null)
-    // Use router for smoother navigation
-    setTimeout(() => {
-      window.location.href = "/"
-    }, 100)
-  }
 
   return (
     <motion.header
@@ -146,7 +109,13 @@ export function Header() {
           </Button>
 
           {/* User Profile */}
-          {user ? (
+          {!mounted || isLoading ? (
+            // Loading skeleton to prevent flash
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 bg-muted animate-pulse rounded-full" />
+              <div className="h-4 w-16 bg-muted animate-pulse rounded hidden sm:block" />
+            </div>
+          ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="gap-2 rounded-full pl-1 pr-3 border-muted-foreground/20">
@@ -164,7 +133,7 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button asChild size="sm" className="rounded-full px-6 shadow-md"><Link href="/auth/login">Sign In</Link></Button>
+            <Button asChild size="sm" className="rounded-full px-6 shadow-md"><Link href="/auth/login">Get Started</Link></Button>
           )}
 
           {/* Mobile Menu */}

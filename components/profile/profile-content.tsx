@@ -136,42 +136,42 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
     }, 0) / (progress.length || 1)
 
   return (
-    <div className="container mx-auto px-4 py-8 lg:px-8">
-      <div className="grid gap-8 lg:grid-cols-3">
+    <div className="w-full max-w-7xl mx-auto px-4 py-4 sm:py-8 lg:px-8 overflow-hidden">
+      <div className="grid gap-4 sm:gap-8 lg:grid-cols-3 w-full">
         {/* Profile Sidebar */}
         <div className="lg:col-span-1">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="text-center">
-                <Avatar className="h-24 w-24 mx-auto mb-4 border-4 border-accent">
+                <Avatar className="h-20 w-20 sm:h-24 sm:w-24 mx-auto mb-3 sm:mb-4 border-4 border-accent">
                   <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xl sm:text-2xl">
                     {(profile?.full_name || user.email || "U").charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <h2 className="font-serif text-xl font-bold text-foreground">{profile?.full_name || "User"}</h2>
-                <p className="text-muted-foreground">{user.email}</p>
+                <h2 className="font-serif text-lg sm:text-xl font-bold text-foreground">{profile?.full_name || "User"}</h2>
+                <p className="text-sm sm:text-base text-muted-foreground truncate px-2">{user.email}</p>
                 <Badge variant="secondary" className="mt-2">
                   {profile?.role === "admin" ? "Administrator" : "Student"}
                 </Badge>
               </div>
 
               {/* Subscription Status */}
-              <div className="mt-6 p-4 rounded-lg bg-muted/50">
+              <div className="mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg bg-muted/50">
                 {subscription ? (
                   <>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-foreground">Premium Plan</span>
-                      <Badge className="bg-green-500">Active</Badge>
+                      <span className="font-medium text-foreground text-sm sm:text-base">Premium Plan</span>
+                      <Badge className="bg-green-500 text-xs">Active</Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       Expires: {new Date(subscription.end_date).toLocaleDateString()}
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="font-medium text-foreground mb-2">Free Plan</p>
-                    <Button size="sm" className="w-full" asChild>
+                    <p className="font-medium text-foreground mb-2 text-sm sm:text-base">Free Plan</p>
+                    <Button size="sm" className="w-full text-xs sm:text-sm" asChild>
                       <Link href="/pricing">Upgrade to Premium</Link>
                     </Button>
                   </>
@@ -179,20 +179,20 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
               </div>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-2 gap-4 mt-6">
-                <div className="text-center p-3 rounded-lg bg-muted/50">
-                  <BookOpen className="h-6 w-6 mx-auto text-primary mb-1" />
-                  <p className="text-xl font-bold text-foreground">{purchases.length}</p>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-4 sm:mt-6">
+                <div className="text-center p-2 sm:p-3 rounded-lg bg-muted/50">
+                  <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 mx-auto text-primary mb-1" />
+                  <p className="text-lg sm:text-xl font-bold text-foreground">{purchases.length}</p>
                   <p className="text-xs text-muted-foreground">Purchased</p>
                 </div>
-                <div className="text-center p-3 rounded-lg bg-muted/50">
-                  <Bookmark className="h-6 w-6 mx-auto text-accent mb-1" />
-                  <p className="text-xl font-bold text-foreground">{savedCases.length}</p>
+                <div className="text-center p-2 sm:p-3 rounded-lg bg-muted/50">
+                  <Bookmark className="h-5 w-5 sm:h-6 sm:w-6 mx-auto text-accent mb-1" />
+                  <p className="text-lg sm:text-xl font-bold text-foreground">{savedCases.length}</p>
                   <p className="text-xs text-muted-foreground">Saved Cases</p>
                 </div>
               </div>
 
-              <Button variant="outline" className="w-full mt-6 gap-2 bg-transparent" onClick={handleSignOut}>
+              <Button variant="outline" className="w-full mt-4 sm:mt-6 gap-2 bg-transparent text-sm" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4" />
                 Sign Out
               </Button>
@@ -201,33 +201,50 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
         </div>
 
         {/* Main Content */}
-        <div className="lg:col-span-2">
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="w-full justify-start">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="purchases">Purchases</TabsTrigger>
-              <TabsTrigger value="saved">Saved Cases</TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
-            </TabsList>
+        <div className="lg:col-span-2 min-w-0 w-full">
+          <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6 w-full">
+            <div className="w-full overflow-hidden pb-2 sm:overflow-visible">
+              <TabsList className="grid w-full grid-cols-5 sm:flex sm:w-full sm:justify-start p-1 bg-muted rounded-lg h-auto">
+                <TabsTrigger value="overview" className="text-xs sm:text-sm px-1 sm:px-3 py-1.5 sm:py-2">
+                  <span className="hidden sm:inline">Overview</span>
+                  <span className="sm:hidden">Overview</span>
+                </TabsTrigger>
+                <TabsTrigger value="purchases" className="text-xs sm:text-sm px-1 sm:px-3 py-1.5 sm:py-2">
+                  <span className="hidden sm:inline">Purchases</span>
+                  <span className="sm:hidden">Purchases</span>
+                </TabsTrigger>
+                <TabsTrigger value="saved" className="text-xs sm:text-sm px-1 sm:px-3 py-1.5 sm:py-2">
+                  <span className="hidden sm:inline">Saved Cases</span>
+                  <span className="sm:hidden">Saved</span>
+                </TabsTrigger>
+                <TabsTrigger value="activity" className="text-xs sm:text-sm px-1 sm:px-3 py-1.5 sm:py-2">
+                  <span className="hidden sm:inline">Activity</span>
+                  <span className="sm:hidden">Activity</span>
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="text-xs sm:text-sm px-1 sm:px-3 py-1.5 sm:py-2">
+                  <span className="hidden sm:inline">Settings</span>
+                  <span className="sm:hidden">Settings</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            <TabsContent value="overview" className="space-y-6">
+            <TabsContent value="overview" className="space-y-4 sm:space-y-6 w-full">
               {/* Learning Progress */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Award className="h-5 w-5 text-accent" />
+              <Card className="w-full">
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Award className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
                     Learning Progress
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex-1">
+                <CardContent className="pt-0 w-full">
+                  <div className="w-full mb-4">
+                    <div className="w-full">
                       <div className="flex justify-between text-sm mb-1">
                         <span>Overall Progress</span>
                         <span className="font-medium">{Math.round(totalProgress)}%</span>
                       </div>
-                      <Progress value={totalProgress} />
+                      <Progress value={totalProgress} className="w-full" />
                     </div>
                   </div>
 
@@ -252,42 +269,42 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
               </Card>
 
               {/* Quick Actions */}
-              <div className="grid gap-4 md:grid-cols-3">
-                <Card className="hover:shadow-md transition-shadow">
-                  <Link href="/study-materials">
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <div className="p-3 rounded-lg bg-primary/10">
-                        <BookLawIcon className="h-6 w-6 text-primary" />
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full">
+                <Card className="hover:shadow-md transition-shadow w-full">
+                  <Link href="/case-files">
+                    <CardContent className="p-3 sm:p-4 flex items-center gap-3 w-full">
+                      <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                        <BookLawIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">Study Materials</p>
-                        <p className="text-sm text-muted-foreground">Continue learning</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-foreground text-sm truncate">Case Files</p>
+                        <p className="text-xs text-muted-foreground truncate">Continue learning</p>
                       </div>
                     </CardContent>
                   </Link>
                 </Card>
-                <Card className="hover:shadow-md transition-shadow">
+                <Card className="hover:shadow-md transition-shadow w-full">
                   <Link href="/court-tracker">
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <div className="p-3 rounded-lg bg-accent/10">
-                        <ScalesIcon className="h-6 w-6 text-accent" />
+                    <CardContent className="p-3 sm:p-4 flex items-center gap-3 w-full">
+                      <div className="p-2 rounded-lg bg-accent/10 shrink-0">
+                        <ScalesIcon className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">Court Tracker</p>
-                        <p className="text-sm text-muted-foreground">{savedCases.length} saved cases</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-foreground text-sm truncate">Court Tracker</p>
+                        <p className="text-xs text-muted-foreground truncate">{savedCases.length} saved cases</p>
                       </div>
                     </CardContent>
                   </Link>
                 </Card>
-                <Card className="hover:shadow-md transition-shadow">
+                <Card className="hover:shadow-md transition-shadow w-full sm:col-span-2 lg:col-span-1">
                   <Link href="/store">
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <div className="p-3 rounded-lg bg-primary/10">
-                        <BookOpen className="h-6 w-6 text-primary" />
+                    <CardContent className="p-3 sm:p-4 flex items-center gap-3 w-full">
+                      <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                        <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">Book Store</p>
-                        <p className="text-sm text-muted-foreground">Browse books</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-foreground text-sm truncate">Book Store</p>
+                        <p className="text-xs text-muted-foreground truncate">Browse books</p>
                       </div>
                     </CardContent>
                   </Link>
@@ -297,10 +314,10 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
 
             <TabsContent value="purchases">
               <Card>
-                <CardHeader>
-                  <CardTitle>My Library</CardTitle>
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="text-base sm:text-lg">My Library</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   {purchasedItems.length === 0 ? (
                     <div className="text-center py-8">
                       <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
@@ -312,24 +329,24 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
                   ) : (
                     <div className="space-y-4">
                       {purchasedItems.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                        <div key={item.id} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               {item.type === 'book' ? (
-                                <BookOpen className="h-4 w-4 text-primary" />
+                                <BookOpen className="h-4 w-4 text-primary shrink-0" />
                               ) : (
-                                <FileText className="h-4 w-4 text-accent" />
+                                <FileText className="h-4 w-4 text-accent shrink-0" />
                               )}
-                              <p className="font-medium text-foreground">{item.title}</p>
-                              <Badge variant="outline" className="text-xs capitalize">
+                              <p className="font-medium text-foreground text-sm sm:text-base truncate">{item.title}</p>
+                              <Badge variant="outline" className="text-xs capitalize shrink-0">
                                 {item.type.replace('_', ' ')}
                               </Badge>
                             </div>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-xs sm:text-sm text-muted-foreground">
                               Purchased on {new Date(purchases.find(p => p.item_id === item.id)?.created_at || '').toLocaleDateString()}
                             </p>
                           </div>
-                          <Button variant="outline" size="sm" asChild>
+                          <Button variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm" asChild>
                             <Link href={item.link}>
                               <BookOpen className="h-4 w-4 mr-2" />
                               Read
@@ -400,24 +417,24 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
 
             <TabsContent value="settings">
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>Account Settings</span>
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <span className="text-base sm:text-lg">Account Settings</span>
                     {!isEditing ? (
-                      <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm" onClick={() => setIsEditing(true)}>
                         <Edit2 className="h-4 w-4 mr-2" />
                         Edit
                       </Button>
                     ) : (
-                      <Button size="sm" onClick={handleSave}>
+                      <Button size="sm" className="w-full sm:w-auto text-xs sm:text-sm" onClick={handleSave}>
                         <Save className="h-4 w-4 mr-2" />
                         Save
                       </Button>
                     )}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid gap-4 md:grid-cols-2">
+                <CardContent className="space-y-4 sm:space-y-6 pt-0">
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
                       <Input

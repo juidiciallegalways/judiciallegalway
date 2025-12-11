@@ -6,7 +6,7 @@ import { useTheme } from "next-themes"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { ScalesIcon } from "@/components/icons/legal-icons"
 import { Menu, Sun, Moon, ChevronDown, User, LogOut, Scale, ShoppingBag, Settings, FileText } from "lucide-react"
@@ -139,15 +139,118 @@ export function Header() {
           {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Menu className="h-5 w-5" />
+              </Button>
             </SheetTrigger>
-            <SheetContent side="right">
-              <div className="flex flex-col gap-4 mt-8">
-                {navigation.map((item) => (
-                  <Link key={item.name} href={item.href} onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium p-2 hover:bg-muted rounded-md">
-                    {item.name}
-                  </Link>
-                ))}
+            <SheetContent side="right" className="w-80 p-0">
+              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center gap-3 p-6 border-b bg-muted/30">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                    <ScalesIcon className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <span className="font-serif text-lg font-bold text-primary block leading-none">Judicially</span>
+                    <span className="text-xs text-muted-foreground font-medium">Legal Ways</span>
+                  </div>
+                </div>
+
+                {/* Navigation */}
+                <div className="flex-1 p-6">
+                  <div className="space-y-2">
+                    {navigation.map((item) => {
+                      const Icon = item.icon
+                      const isActive = pathname === item.href
+                      return (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                            isActive 
+                              ? "bg-primary text-primary-foreground shadow-sm" 
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          }`}
+                        >
+                          {Icon && <Icon className="h-5 w-5" />}
+                          <span>{item.name}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+
+                  {/* User Section */}
+                  <div className="mt-8 pt-6 border-t">
+                    {user ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3 px-4 py-3 bg-muted/50 rounded-lg">
+                          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-xs text-primary-foreground font-bold">
+                            {user.email?.[0].toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{user.email}</p>
+                            <p className="text-xs text-muted-foreground">Signed in</p>
+                          </div>
+                        </div>
+                        
+                        <Link
+                          href="/profile"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                        >
+                          <User className="h-5 w-5" />
+                          <span>Profile</span>
+                        </Link>
+                        
+                        <Link
+                          href="/admin"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                        >
+                          <Settings className="h-5 w-5" />
+                          <span>Admin</span>
+                        </Link>
+                        
+                        <button
+                          onClick={() => {
+                            handleSignOut()
+                            setMobileMenuOpen(false)
+                          }}
+                          className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors w-full"
+                        >
+                          <LogOut className="h-5 w-5" />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <Link
+                        href="/auth/login"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium shadow-sm hover:bg-primary/90 transition-colors"
+                      >
+                        <User className="h-5 w-5" />
+                        <span>Get Started</span>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-6 border-t bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">Theme</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                      className="h-8 w-8 p-0 rounded-full"
+                    >
+                      {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </SheetContent>
           </Sheet>

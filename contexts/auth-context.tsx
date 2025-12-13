@@ -115,8 +115,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           console.log('Session found, setting user and fetching profile')
           setUser(session.user)
-          const profileData = await fetchProfile(session.user.id)
-          setProfile(profileData)
+          
+          // Add timeout for profile fetch
+          const profilePromise = fetchProfile(session.user.id)
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Profile fetch timeout')), 3000)
+          )
+          
+          try {
+            const profileData = await Promise.race([
+              profilePromise as Promise<UserProfile | null>, 
+              timeoutPromise as Promise<UserProfile | null>
+            ])
+            console.log('Profile data received:', profileData)
+            setProfile(profileData)
+          } catch (profileError) {
+            console.error('Profile fetch failed:', profileError)
+            // Continue without profile - don't block the entire auth
+            setProfile(null)
+          }
         } else {
           console.log('No session found')
           setUser(null)
@@ -124,6 +141,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error('Auth init error:', error)
+        setUser(null)
+        setProfile(null)
       } finally {
         console.log('Auth init completed, setting isLoading to false')
         setIsLoading(false)

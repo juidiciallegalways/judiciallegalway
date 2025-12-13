@@ -2,20 +2,39 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
-import { BookLawIcon, ScalesIcon } from "@/components/icons/legal-icons"
-import { BookOpen, Bookmark, Clock, LogOut, Edit2, Save, Award, FileText } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
-import type { User as SupabaseUser } from "@supabase/supabase-js"
 import { toast } from "sonner"
+import { createClient } from "@/lib/supabase/client"
+import { useAuth } from "@/contexts/auth-context"
+import {
+  User,
+  ShoppingBag,
+  Bookmark,
+  Activity,
+  Settings,
+  LogOut,
+  Edit2,
+  Save,
+  X,
+  BookOpen,
+  FileText,
+  Clock,
+  TrendingUp,
+  Award,
+  Target,
+  Scale,
+  Gavel,
+} from "lucide-react"
 
 interface Profile {
   id: string
@@ -26,49 +45,81 @@ interface Profile {
   role: string
 }
 
-interface ProfileContentProps {
-  user: SupabaseUser
-  profile: Profile | null
-}
-
-export function ProfileContent({ user, profile }: ProfileContentProps) {
+export function ProfileContent() {
   const router = useRouter()
+  const { user, profile: authProfile, refreshProfile } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
+  const [purchases, setPurchases] = useState<any[]>([])
+  const [savedCases, setSavedCases] = useState<any[]>([])
+  const [progress, setProgress] = useState<any[]>([])
+  const [activityLogs, setActivityLogs] = useState<any[]>([])
+  const [subscription, setSubscription] = useState<any>(null)
+  const [purchasedItems, setPurchasedItems] = useState<any[]>([])
   const [formData, setFormData] = useState({
-    full_name: profile?.full_name || "",
-    phone: profile?.phone || "",
+    full_name: "",
+    phone: "",
+    avatar_url: "",
   })
-  const [purchases, setPurchases] = useState<{ id: string; item_type: string; item_id: string; amount: number; created_at: string }[]>(
-    [],
-  )
-  const [purchasedItems, setPurchasedItems] = useState<{ id: string; title: string; type: string; link: string }[]>([])
-  const [savedCases, setSavedCases] = useState<{ id: string; case_id: string }[]>([])
-  const [progress, setProgress] = useState<{ material_id: string; current_page: number; total_pages: number }[]>([])
-  const [activityLogs, setActivityLogs] = useState<{ id: string; action: string; created_at: string }[]>([])
-  const [subscription, setSubscription] = useState<{ plan_type: string; status: string; end_date: string } | null>(null)
+  const supabase = createClient()
 
   useEffect(() => {
+    if (authProfile) {
+      setFormData({
+        full_name: authProfile.full_name || "",
+        phone: authProfile.phone || "",
+        avatar_url: authProfile.avatar_url || "",
+      })
+    }
+  }, [authProfile])
+
+  useEffect(() => {
+    if (!user) {
+      console.log('No user found in auth context')
+      return
+    }
+    
+    console.log('User authenticated:', user.id, user.email)
+    
     async function fetchUserData() {
       const supabase = createClient()
+      const userId = user.id
 
       const [purchasesRes, savedRes, caseProgressRes, bookProgressRes, logsRes, subRes] = await Promise.all([
         supabase
           .from("purchases")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .eq("payment_status", "completed")
           .order("created_at", { ascending: false }),
-        supabase.from("saved_cases").select("*").eq("user_id", user.id),
-        supabase.from("case_file_progress").select("*").eq("user_id", user.id),
-        supabase.from("book_progress").select("*").eq("user_id", user.id),
+        supabase.from("saved_cases").select("*").eq("user_id", userId),
+        supabase.from("case_file_progress").select("*").eq("user_id", userId),
+        supabase.from("book_progress").select("*").eq("user_id", userId),
         supabase
           .from("activity_logs")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .order("created_at", { ascending: false })
           .limit(10),
-        supabase.from("subscriptions").select("*").eq("user_id", user.id).eq("status", "active").single(),
+        supabase.from("subscriptions").select("*").eq("user_id", userId).eq("status", "active").single(),
       ])
+
+      // Log errors if any
+      if (purchasesRes.error) console.error('Purchases error:', purchasesRes.error)
+      if (savedRes.error) console.error('Saved cases error:', savedRes.error)
+      if (caseProgressRes.error) console.error('Case progress error:', caseProgressRes.error)
+      if (bookProgressRes.error) console.error('Book progress error:', bookProgressRes.error)
+      if (logsRes.error) console.error('Activity logs error:', logsRes.error)
+      if (subRes.error && subRes.error.code !== 'PGRST116') console.error('Subscription error:', subRes.error)
+
+      console.log('Profile data fetched:', {
+        userId: userId,
+        purchases: purchasesRes.data?.length || 0,
+        savedCases: savedRes.data?.length || 0,
+        caseProgress: caseProgressRes.data?.length || 0,
+        bookProgress: bookProgressRes.data?.length || 0,
+        activityLogs: logsRes.data?.length || 0,
+        subscription: subRes.data
+      })
 
       setPurchases(purchasesRes.data || [])
       setSavedCases(savedRes.data || [])
@@ -111,10 +162,13 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
         setPurchasedItems(items)
       }
     }
+    
     fetchUserData()
-  }, [user.id])
+  }, [user])
 
   const handleSave = async () => {
+    if (!user) return
+    
     const supabase = createClient()
     const { error } = await supabase.from("profiles").upsert({
       id: user.id,
@@ -127,11 +181,13 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
     } else {
       setIsEditing(false)
       toast.success("Profile updated successfully")
-      // Don't refresh - just update local state
+      refreshProfile()
     }
   }
 
   const handleSignOut = async () => {
+    if (!user) return
+    
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push("/")
@@ -151,15 +207,15 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
             <CardContent className="p-4 sm:p-6">
               <div className="text-center">
                 <Avatar className="h-20 w-20 sm:h-24 sm:w-24 mx-auto mb-3 sm:mb-4 border-4 border-accent">
-                  <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} />
+                  <AvatarImage src={authProfile?.avatar_url || "/placeholder.svg"} />
                   <AvatarFallback className="bg-primary text-primary-foreground text-xl sm:text-2xl">
-                    {(profile?.full_name || user.email || "U").charAt(0).toUpperCase()}
+                    {(authProfile?.full_name || user?.email || "U").charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <h2 className="font-serif text-lg sm:text-xl font-bold text-foreground">{profile?.full_name || "User"}</h2>
-                <p className="text-sm sm:text-base text-muted-foreground truncate px-2">{user.email}</p>
+                <h2 className="font-serif text-lg sm:text-xl font-bold text-foreground">{authProfile?.full_name || "User"}</h2>
+                <p className="text-sm sm:text-base text-muted-foreground truncate px-2">{user?.email}</p>
                 <Badge variant="secondary" className="mt-2">
-                  {profile?.role === "admin" ? "Administrator" : profile?.role === "lawyer" ? "Lawyer" : "Student"}
+                  {authProfile?.role === "admin" ? "Administrator" : authProfile?.role === "lawyer" ? "Lawyer" : "Student"}
                 </Badge>
               </div>
 
@@ -281,7 +337,7 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
                   <Link href="/case-files">
                     <CardContent className="p-3 sm:p-4 flex items-center gap-3 w-full">
                       <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-                        <BookLawIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                        <Scale className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-foreground text-sm truncate">Case Files</p>
@@ -294,7 +350,7 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
                   <Link href="/court-tracker">
                     <CardContent className="p-3 sm:p-4 flex items-center gap-3 w-full">
                       <div className="p-2 rounded-lg bg-accent/10 shrink-0">
-                        <ScalesIcon className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
+                        <Gavel className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-foreground text-sm truncate">Court Tracker</p>
@@ -453,7 +509,7 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" value={user.email || ""} disabled className="bg-muted" />
+                      <Input id="email" value={user?.email || ""} disabled className="bg-muted" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone</Label>

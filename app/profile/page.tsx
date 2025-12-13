@@ -24,7 +24,7 @@ export default async function ProfilePage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
-        <ProfileContent user={user} profile={profile} />
+        <ProfileContent />
       </main>
       <Footer />
     </div>

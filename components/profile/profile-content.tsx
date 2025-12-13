@@ -51,7 +51,7 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
     async function fetchUserData() {
       const supabase = createClient()
 
-      const [purchasesRes, savedRes, progressRes, logsRes, subRes] = await Promise.all([
+      const [purchasesRes, savedRes, caseProgressRes, bookProgressRes, logsRes, subRes] = await Promise.all([
         supabase
           .from("purchases")
           .select("*")
@@ -59,7 +59,8 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
           .eq("payment_status", "completed")
           .order("created_at", { ascending: false }),
         supabase.from("saved_cases").select("*").eq("user_id", user.id),
-        supabase.from("user_progress").select("*").eq("user_id", user.id),
+        supabase.from("case_file_progress").select("*").eq("user_id", user.id),
+        supabase.from("book_progress").select("*").eq("user_id", user.id),
         supabase
           .from("activity_logs")
           .select("*")
@@ -71,7 +72,13 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
 
       setPurchases(purchasesRes.data || [])
       setSavedCases(savedRes.data || [])
-      setProgress(progressRes.data || [])
+      
+      // Combine case file and book progress
+      const allProgress = [
+        ...(caseProgressRes.data || []).map(p => ({ ...p, material_id: p.case_file_id })),
+        ...(bookProgressRes.data || []).map(p => ({ ...p, material_id: p.book_id }))
+      ]
+      setProgress(allProgress)
       setActivityLogs(logsRes.data || [])
       setSubscription(subRes.data)
 
@@ -152,7 +159,7 @@ export function ProfileContent({ user, profile }: ProfileContentProps) {
                 <h2 className="font-serif text-lg sm:text-xl font-bold text-foreground">{profile?.full_name || "User"}</h2>
                 <p className="text-sm sm:text-base text-muted-foreground truncate px-2">{user.email}</p>
                 <Badge variant="secondary" className="mt-2">
-                  {profile?.role === "admin" ? "Administrator" : "Student"}
+                  {profile?.role === "admin" ? "Administrator" : profile?.role === "lawyer" ? "Lawyer" : "Student"}
                 </Badge>
               </div>
 

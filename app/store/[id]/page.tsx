@@ -4,6 +4,37 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { notFound } from "next/navigation"
 
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const supabase = await createClient()
+  
+  const { data: book } = await supabase
+    .from('books')
+    .select('title, description, author, price, category')
+    .eq('id', params.id)
+    .eq('is_published', true)
+    .single()
+
+  if (!book) {
+    return {
+      title: 'Book Not Found | Judicially Legal Ways',
+      description: 'The requested book could not be found.',
+    }
+  }
+
+  return {
+    title: `${book.title} by ${book.author} | Judicially Legal Ways`,
+    description: book.description || `Purchase ${book.title} - ${book.category} book for legal studies and exam preparation.`,
+    openGraph: {
+      title: book.title,
+      description: book.description,
+      type: 'product',
+      price: book.price.toString(),
+      currency: 'INR',
+      availability: 'instock',
+    },
+  }
+}
+
 export default async function BookDetailPage({ params }: { params: { id: string } }) {
   const supabase = await createClient()
   

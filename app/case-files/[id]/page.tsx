@@ -4,6 +4,36 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { notFound } from "next/navigation"
 
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const supabase = await createClient()
+  
+  const { data: caseFile } = await supabase
+    .from('case_files')
+    .select('title, description, case_number, court_name, category, price')
+    .eq('id', params.id)
+    .eq('is_published', true)
+    .single()
+
+  if (!caseFile) {
+    return {
+      title: 'Case File Not Found | Judicially Legal Ways',
+      description: 'The requested case file could not be found.',
+    }
+  }
+
+  return {
+    title: `${caseFile.title} | Judicially Legal Ways`,
+    description: caseFile.description || `Access landmark case ${caseFile.case_number} from ${caseFile.court_name} - ${caseFile.category} legal document.`,
+    openGraph: {
+      title: caseFile.title,
+      description: caseFile.description,
+      type: 'article',
+      price: caseFile.price?.toString() || '0',
+      currency: 'INR',
+    },
+  }
+}
+
 export default async function CaseFilePage({ params }: { params: { id: string } }) {
   const supabase = await createClient()
   

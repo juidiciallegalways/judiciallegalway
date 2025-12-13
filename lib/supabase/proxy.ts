@@ -25,72 +25,18 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect admin routes
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/auth/login'
-      url.searchParams.set('next', request.nextUrl.pathname)
-      return NextResponse.redirect(url)
-    }
+  // Protected routes (except admin - let page handle it)
+  const protectedRoutes = ["/dashboard", "/profile", "/reader"]
+  const isProtectedRoute = protectedRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
 
-    // Check if user is admin - with retry logic
-    let profile = null
-    let retries = 0
-    while (!profile && retries < 3) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle()
-      
-      if (data) {
-        profile = data
-        break
-      }
-      
-      if (retries < 2) {
-        await new Promise(resolve => setTimeout(resolve, 100))
-        retries++
-      } else {
-        break
-      }
-    }
-
-    // If no profile exists, let the page handle it (it will create one)
-    if (!profile) {
-      return supabaseResponse
-    }
-
-    // Only redirect if we're sure they're not admin
-    if (profile.role !== 'admin') {
-      console.log('Admin access denied:', user.email, 'Role:', profile.role)
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
-      url.searchParams.set('error', 'admin_access_required')
-      return NextResponse.redirect(url)
-    }
+  if (isProtectedRoute && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/auth/login"
+    return NextResponse.redirect(url)
   }
 
-  // Protect profile routes
-  if (request.nextUrl.pathname.startsWith('/profile')) {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/auth/login'
-      url.searchParams.set('next', request.nextUrl.pathname)
-      return NextResponse.redirect(url)
-    }
-  }
-
-  // Protect reader routes
-  if (request.nextUrl.pathname.startsWith('/reader')) {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/auth/login'
-      url.searchParams.set('next', request.nextUrl.pathname)
-      return NextResponse.redirect(url)
-    }
-  }
+  // Don't check admin in middleware - let the page component handle it
+  // This prevents race conditions with profile loading
 
   return supabaseResponse
 }

@@ -25,7 +25,7 @@ export interface CourtCase {
   court_type?: string
   state: string
   judge_name?: string
-  status: string
+  status: 'pending' | 'hearing_today' | 'disposed' | 'adjourned'
   filing_date?: string
   next_hearing_date?: string
   disposal_date?: string
@@ -49,8 +49,8 @@ export function CourtTrackerContent({ initialCases = [] }: CourtTrackerContentPr
   const filteredCases = cases.filter((c) => {
     const searchLower = searchQuery.toLowerCase()
     
-    // Use party_names array or case_title
-    const title = c.case_title || (c.party_names && c.party_names.length >= 2 ? `${c.party_names[0]} v. ${c.party_names[1]}` : c.case_number)
+    // Handle variable field names from DB
+    const title = c.case_title || (c.party_names && c.party_names.length >= 2 ? `${c.party_names[0]} v. ${c.party_names[1]}` : '')
     const caseNo = c.case_number?.toLowerCase() || ""
     const court = c.court_name?.toLowerCase() || ""
 
@@ -104,10 +104,10 @@ export function CourtTrackerContent({ initialCases = [] }: CourtTrackerContentPr
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="Hearing Scheduled">Hearing Scheduled</SelectItem>
-              <SelectItem value="Disposed">Disposed</SelectItem>
-              <SelectItem value="Adjourned">Adjourned</SelectItem>
-              <SelectItem value="Judgment Reserved">Judgment Reserved</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="hearing_today">Hearing Today</SelectItem>
+              <SelectItem value="disposed">Disposed</SelectItem>
+              <SelectItem value="adjourned">Adjourned</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -146,7 +146,7 @@ export function CourtTrackerContent({ initialCases = [] }: CourtTrackerContentPr
                       </Badge>
                     </div>
                     <h3 className="font-serif text-lg font-semibold pt-2 leading-tight group-hover:text-primary transition-colors">
-                      {courtCase.case_title || (courtCase.party_names && courtCase.party_names.length >= 2 ? `${courtCase.party_names[0]} v. ${courtCase.party_names[1]}` : courtCase.case_number)}
+                      {courtCase.case_title || (courtCase.party_names && courtCase.party_names.length >= 2 ? `${courtCase.party_names[0]} v. ${courtCase.party_names[1]}` : 'Untitled Case')}
                     </h3>
                   </CardHeader>
                   
@@ -171,7 +171,7 @@ export function CourtTrackerContent({ initialCases = [] }: CourtTrackerContentPr
                       <DialogContent className="max-w-2xl">
                         <DialogHeader>
                           <DialogTitle className="font-serif text-2xl pr-8">
-                            {courtCase.case_title || (courtCase.party_names && courtCase.party_names.length >= 2 ? `${courtCase.party_names[0]} v. ${courtCase.party_names[1]}` : courtCase.case_number)}
+                            {courtCase.case_title || (courtCase.party_names && courtCase.party_names.length >= 2 ? `${courtCase.party_names[0]} v. ${courtCase.party_names[1]}` : 'Untitled Case')}
                           </DialogTitle>
                           <p className="text-sm text-muted-foreground mt-2">
                             Case details and hearing information

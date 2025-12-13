@@ -1,5 +1,11 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { RefreshCw, Home } from "lucide-react"
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function DebugAuthPage() {
   const supabase = await createClient()
@@ -18,7 +24,21 @@ export default async function DebugAuthPage() {
 
   return (
     <div className="container mx-auto py-12 px-4 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-8">Auth Debug Information</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Auth Debug Information</h1>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/">
+              <Home className="w-4 h-4 mr-2" />
+              Home
+            </Link>
+          </Button>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
+      </div>
       
       <div className="space-y-6">
         <div className="bg-muted p-6 rounded-lg">

@@ -129,19 +129,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Auth state change:', event, session?.user?.email)
       
       if (event === 'SIGNED_IN' && session?.user) {
+        console.log('User signed in, fetching profile...')
         setUser(session.user)
         const profileData = await fetchProfile(session.user.id)
-        setProfile(profileData)
         console.log('Profile loaded:', profileData)
+        setProfile(profileData)
       } else if (event === 'SIGNED_OUT') {
+        console.log('User signed out')
         setUser(null)
         setProfile(null)
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        console.log('Token refreshed, updating profile...')
         setUser(session.user)
-        // Refresh profile on token refresh
         const profileData = await fetchProfile(session.user.id)
         setProfile(profileData)
       } else if (session?.user && !profile) {
+        console.log('Session exists but no profile, fetching...')
         setUser(session.user)
         const profileData = await fetchProfile(session.user.id)
         setProfile(profileData)
@@ -157,16 +160,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isLawyer = profile?.role === 'lawyer'
   const isStudent = profile?.role === 'student' || (!isAdmin && !isLawyer)
 
+  const value: AuthContextType = {
+    user,
+    profile,
+    isLoading,
+    isAdmin: profile?.role === 'admin',
+    isLawyer: profile?.role === 'lawyer',
+    isStudent: profile?.role === 'student' || !profile,
+    refreshProfile,
+  }
+
+  // Make auth context available globally for debugging
+  if (typeof window !== 'undefined') {
+    try {
+      (window as any).authContext = value
+      console.log('Auth context exposed to window:', value)
+    } catch (error) {
+      console.error('Failed to expose auth context:', error)
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      profile, 
-      isLoading, 
-      isAdmin, 
-      isLawyer, 
-      isStudent,
-      refreshProfile 
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

@@ -47,7 +47,28 @@ interface Profile {
 
 export function ProfileContent() {
   const router = useRouter()
-  const { user, profile: authProfile, refreshProfile } = useAuth()
+  const { user, profile: authProfile, refreshProfile, isLoading } = useAuth()
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('=== PROFILE COMPONENT DEBUG ===')
+    console.log('User:', user)
+    console.log('Profile:', authProfile)
+    console.log('Is Loading:', isLoading)
+    console.log('User email:', user?.email)
+    console.log('Profile role:', authProfile?.role)
+    console.log('Profile name:', authProfile?.full_name)
+    
+    // Make available globally
+    if (typeof window !== 'undefined') {
+      (window as any).profileDebug = {
+        user,
+        profile: authProfile,
+        isLoading,
+        refreshProfile
+      }
+    }
+  }, [user, authProfile, isLoading])
   const [isEditing, setIsEditing] = useState(false)
   const [purchases, setPurchases] = useState<any[]>([])
   const [savedCases, setSavedCases] = useState<any[]>([])
@@ -61,6 +82,31 @@ export function ProfileContent() {
     avatar_url: "",
   })
   const supabase = createClient()
+
+  // Show loading state while auth is loading
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-7xl mx-auto px-4 py-8 lg:px-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-muted rounded mb-6 w-48"></div>
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+              <div className="h-64 bg-muted rounded"></div>
+            </div>
+            <div className="lg:col-span-2">
+              <div className="h-96 bg-muted rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Redirect if not authenticated
+  if (!user) {
+    router.push("/auth/login")
+    return null
+  }
 
   useEffect(() => {
     if (authProfile) {

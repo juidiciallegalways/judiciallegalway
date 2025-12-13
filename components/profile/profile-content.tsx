@@ -82,7 +82,7 @@ export function ProfileContent() {
     
     async function fetchUserData() {
       const supabase = createClient()
-      const userId = user.id
+      const userId = user!.id
 
       const [purchasesRes, savedRes, caseProgressRes, bookProgressRes, logsRes, subRes] = await Promise.all([
         supabase

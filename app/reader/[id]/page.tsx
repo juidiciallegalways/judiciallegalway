@@ -2,20 +2,21 @@ import { createClient } from "@/lib/supabase/server"
 import { DRMReader } from "@/components/reader/drm-reader"
 import { notFound, redirect } from "next/navigation"
 
-export default async function ReaderPage({ params }: { params: { id: string } }) {
+export default async function ReaderPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
   
   // Get current user
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    redirect('/auth/login?next=' + encodeURIComponent(`/reader/${params.id}`))
+    redirect('/auth/login?next=' + encodeURIComponent(`/reader/${id}`))
   }
 
   // Try to find the item in case_files first
   const { data: caseFile } = await supabase
     .from('case_files')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('is_published', true)
     .single()
 
@@ -32,7 +33,7 @@ export default async function ReaderPage({ params }: { params: { id: string } })
         .single()
 
       if (!purchase) {
-        redirect(`/case-files/${params.id}`)
+        redirect(`/case-files/${id}`)
       }
     }
 
@@ -50,7 +51,7 @@ export default async function ReaderPage({ params }: { params: { id: string } })
   const { data: book } = await supabase
     .from('books')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('is_published', true)
     .single()
 
@@ -67,7 +68,7 @@ export default async function ReaderPage({ params }: { params: { id: string } })
         .single()
 
       if (!purchase) {
-        redirect(`/store/${params.id}`)
+        redirect(`/store/${id}`)
       }
     }
 

@@ -4,13 +4,14 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { notFound } from "next/navigation"
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
   
   const { data: book } = await supabase
     .from('books')
     .select('title, description, author, price, category')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('is_published', true)
     .single()
 
@@ -35,14 +36,15 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   }
 }
 
-export default async function BookDetailPage({ params }: { params: { id: string } }) {
+export default async function BookDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
   
   // Fetch book data
   const { data: book, error } = await supabase
     .from('books')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('is_published', true)
     .single()
 

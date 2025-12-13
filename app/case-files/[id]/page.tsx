@@ -4,13 +4,14 @@ import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { notFound } from "next/navigation"
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
   
   const { data: caseFile } = await supabase
     .from('case_files')
     .select('title, description, case_number, court_name, category, price')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('is_published', true)
     .single()
 
@@ -34,14 +35,15 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
   }
 }
 
-export default async function CaseFilePage({ params }: { params: { id: string } }) {
+export default async function CaseFilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
   
   // Fetch Real Data
   const { data: caseFile, error } = await supabase
     .from('case_files')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('is_published', true)
     .single()
 

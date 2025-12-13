@@ -253,7 +253,12 @@ export function ProfileContent() {
             <CardContent className="p-4 sm:p-6">
               <div className="text-center">
                 <Avatar className="h-20 w-20 sm:h-24 sm:w-24 mx-auto mb-3 sm:mb-4 border-4 border-accent">
-                  <AvatarImage src={authProfile?.avatar_url || "/placeholder.svg"} />
+                  <AvatarImage 
+                    src={authProfile?.avatar_url?.includes('googleusercontent.com') 
+                      ? `/api/proxy-image?url=${encodeURIComponent(authProfile.avatar_url)}`
+                      : authProfile?.avatar_url || "/placeholder.svg"
+                    } 
+                  />
                   <AvatarFallback className="bg-primary text-primary-foreground text-xl sm:text-2xl">
                     {(authProfile?.full_name || user?.email || "U").charAt(0).toUpperCase()}
                   </AvatarFallback>

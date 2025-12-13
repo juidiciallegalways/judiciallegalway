@@ -108,19 +108,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const initAuth = async () => {
       try {
+        console.log('Initializing auth...')
         const { data: { session } } = await supabase.auth.getSession()
         
         if (session?.user) {
+          console.log('Session found, setting user and fetching profile')
           setUser(session.user)
           const profileData = await fetchProfile(session.user.id)
           setProfile(profileData)
         } else {
+          console.log('No session found')
           setUser(null)
           setProfile(null)
         }
       } catch (error) {
         console.error('Auth init error:', error)
       } finally {
+        console.log('Auth init completed, setting isLoading to false')
         setIsLoading(false)
       }
     }
@@ -139,10 +143,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const profileData = await fetchProfile(session.user.id)
         console.log('Profile loaded:', profileData)
         setProfile(profileData)
+        setIsLoading(false)
       } else if (event === 'SIGNED_OUT') {
         console.log('User signed out')
         setUser(null)
         setProfile(null)
+        setIsLoading(false)
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
         console.log('Token refreshed, updating profile...')
         setUser(session.user)
@@ -153,8 +159,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session.user)
         const profileData = await fetchProfile(session.user.id)
         setProfile(profileData)
+        setIsLoading(false)
       }
-      setIsLoading(false)
     })
 
     return () => subscription.unsubscribe()

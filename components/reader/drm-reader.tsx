@@ -11,27 +11,67 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 interface DRMReaderProps {
   filePath: string
   userEmail: string
+  itemId: string
+  itemType: 'case_file' | 'book'
 }
 
-export function DRMReader({ filePath, userEmail }: DRMReaderProps) {
+export function DRMReader({ filePath, userEmail, itemId, itemType }: DRMReaderProps) {
   const [url, setUrl] = useState<string | null>(null)
   const [numPages, setNumPages] = useState<number>(0)
   const [loading, setLoading] = useState(true)
+  const [hasAccess, setHasAccess] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
-    async function loadSecureUrl() {
-      // Create a signed URL valid for only 60 seconds
-      // This prevents users from sharing the link
-      const { data, error } = await supabase.storage
-        .from('protected_files')
-        .createSignedUrl(filePath, 60) 
+    async function verifyAccessAndLoadUrl() {
+      try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          setLoading(false)
+          return
+        }
 
-      if (data) setUrl(data.signedUrl)
-      setLoading(false)
+        // Check if user has purchased this item or if it's free
+        const { data: itemData } = await supabase
+          .from(itemType === 'case_file' ? 'case_files' : 'books')
+          .select('price')
+          .eq('id', itemId)
+          .single()
+
+        // If item is free (price = 0), allow access
+        if (itemData?.price === 0) {
+          setHasAccess(true)
+        } else {
+          // Check purchase
+          const { data: purchaseData } = await supabase
+            .from('purchases')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('item_type', itemType)
+            .eq('item_id', itemId)
+            .eq('payment_status', 'completed')
+            .single()
+
+          setHasAccess(!!purchaseData)
+        }
+
+        if (hasAccess || itemData?.price === 0) {
+          // Create a signed URL valid for only 60 seconds
+          const { data, error } = await supabase.storage
+            .from('protected_files')
+            .createSignedUrl(filePath, 60)
+
+          if (data) setUrl(data.signedUrl)
+        }
+      } catch (error) {
+        console.error('Error verifying access:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-    loadSecureUrl()
-  }, [filePath])
+    verifyAccessAndLoadUrl()
+  }, [filePath, itemId, itemType, supabase, hasAccess])
 
   // Prevent Right Click
   useEffect(() => {
@@ -41,6 +81,22 @@ export function DRMReader({ filePath, userEmail }: DRMReaderProps) {
   }, [])
 
   if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin" /></div>
+
+  if (!hasAccess) {
+    return (
+      <div className="flex flex-col items-center justify-center p-20 text-center">
+        <AlertTriangle className="h-16 w-16 text-destructive mb-4" />
+        <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
+        <p className="text-muted-foreground mb-4">You need to purchase this content to access it.</p>
+        <button 
+          onClick={() => window.history.back()} 
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+        >
+          Go Back
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="relative w-full max-w-4xl mx-auto bg-slate-50 min-h-screen select-none print:hidden">

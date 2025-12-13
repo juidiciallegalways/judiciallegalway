@@ -14,7 +14,8 @@ import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/auth-context"
 import { useCart } from "@/contexts/cart-context"
 
-const navigation = [
+// Base navigation - visible to all users
+const baseNavigation = [
   { name: "Home", href: "/", icon: null },
   { name: "Case Files", href: "/case-files", icon: FileText },
   { name: "Court Tracker", href: "/court-tracker", icon: Scale },
@@ -28,7 +29,10 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { items } = useCart()
-  const { user, isLoading } = useAuth()
+  const { user, profile, isLoading, isAdmin, isLawyer } = useAuth()
+
+  // Filter navigation based on user role - students should NOT see admin links
+  const navigation = baseNavigation
 
   const handleSignOut = async () => {
     const supabase = createClient()
@@ -127,7 +131,12 @@ export function Header() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem asChild><Link href="/profile"><User className="mr-2 h-4 w-4"/> Profile</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link href="/admin"><Settings className="mr-2 h-4 w-4"/> Admin</Link></DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem asChild><Link href="/admin"><Settings className="mr-2 h-4 w-4"/> Admin Panel</Link></DropdownMenuItem>
+                )}
+                {isLawyer && (
+                  <DropdownMenuItem asChild><Link href="/court-tracker"><Scale className="mr-2 h-4 w-4"/> My Cases</Link></DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-red-600"><LogOut className="mr-2 h-4 w-4"/> Sign Out</DropdownMenuItem>
               </DropdownMenuContent>
@@ -204,14 +213,26 @@ export function Header() {
                           <span>Profile</span>
                         </Link>
                         
-                        <Link
-                          href="/admin"
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
-                        >
-                          <Settings className="h-5 w-5" />
-                          <span>Admin</span>
-                        </Link>
+                        {isAdmin && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                          >
+                            <Settings className="h-5 w-5" />
+                            <span>Admin Panel</span>
+                          </Link>
+                        )}
+                        {isLawyer && (
+                          <Link
+                            href="/court-tracker"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                          >
+                            <Scale className="h-5 w-5" />
+                            <span>My Cases</span>
+                          </Link>
+                        )}
                         
                         <button
                           onClick={() => {

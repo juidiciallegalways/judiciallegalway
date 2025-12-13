@@ -18,19 +18,29 @@ import { toast } from "sonner"
 export interface CaseFile {
   id: string
   title: string
-  description: string
-  case_number: string
-  court_name: string
+  description: string | null
+  case_number: string | null
+  court_name: string | null
   category: string
-  subcategory: string
-  year: number
-  thumbnail_url: string
+  subcategory: string | null
+  year: number | null
+  thumbnail_url: string | null
   file_url: string
   is_premium: boolean
   price: number
   total_pages: number
   is_published: boolean
-  tags: string[]
+  tags: string[] | null
+  judge_name: string | null
+  petitioner: string | null
+  respondent: string | null
+  advocate_names: string[] | null
+  case_summary: string | null
+  key_points: string[] | null
+  judgment_date: string | null
+  bench: string | null
+  state: string | null
+  created_at: string
 }
 
 interface CaseFilesContentProps {

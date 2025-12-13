@@ -24,6 +24,8 @@ export interface Book {
   price: number
   original_price: number | null
   cover_url: string | null
+  preview_url: string | null
+  file_url: string | null
   category: string | null
   pages: number | null
   isbn: string | null
@@ -32,6 +34,7 @@ export interface Book {
   bundle_items: string[] | null
   stock: number
   is_published: boolean
+  created_at: string
 }
 
 interface StoreContentProps {

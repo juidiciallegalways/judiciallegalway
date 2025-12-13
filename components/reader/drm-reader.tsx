@@ -25,26 +25,41 @@ export function DRMReader({ filePath, userEmail, itemId, itemType }: DRMReaderPr
   useEffect(() => {
     async function verifyAccessAndLoadUrl() {
       try {
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser()
+        // Get current user with timeout
+        const userPromise = supabase.auth.getUser()
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Auth timeout')), 5000)
+        )
+        
+        const { data: { user } } = await Promise.race([userPromise, timeoutPromise]) as any
         if (!user) {
           setLoading(false)
           return
         }
 
-        // Check if user has purchased this item or if it's free
-        const { data: itemData } = await supabase
+        // Check item data with timeout
+        const itemPromise = supabase
           .from(itemType === 'case_file' ? 'case_files' : 'books')
           .select('price')
           .eq('id', itemId)
           .single()
+        
+        const itemTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Item query timeout')), 5000)
+        )
+        
+        const { data: itemData } = await Promise.race([itemPromise, itemTimeoutPromise]) as any
 
         // If item is free (price = 0), allow access
+        let hasAccessNow = false
+        let purchaseData = null
+        
         if (itemData?.price === 0) {
+          hasAccessNow = true
           setHasAccess(true)
         } else {
-          // Check purchase
-          const { data: purchaseData } = await supabase
+          // Check purchase with timeout
+          const purchasePromise = supabase
             .from('purchases')
             .select('id')
             .eq('user_id', user.id)
@@ -52,26 +67,40 @@ export function DRMReader({ filePath, userEmail, itemId, itemType }: DRMReaderPr
             .eq('item_id', itemId)
             .eq('payment_status', 'completed')
             .single()
-
-          setHasAccess(!!purchaseData)
+          
+          const purchaseTimeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Purchase query timeout')), 5000)
+          )
+          
+          purchaseData = await Promise.race([purchasePromise, purchaseTimeoutPromise]) as any
+          hasAccessNow = !!purchaseData?.data
+          setHasAccess(hasAccessNow)
         }
-
-        if (hasAccess || itemData?.price === 0) {
-          // Create a signed URL valid for only 60 seconds
-          const { data, error } = await supabase.storage
+        
+        if (hasAccessNow) {
+          // Create a signed URL with timeout
+          const urlPromise = supabase.storage
             .from('protected_files')
             .createSignedUrl(filePath, 60)
-
+          
+          const urlTimeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Signed URL timeout')), 5000)
+          )
+          
+          const { data } = await Promise.race([urlPromise, urlTimeoutPromise]) as any
           if (data) setUrl(data.signedUrl)
         }
       } catch (error) {
         console.error('Error verifying access:', error)
+        // In case of error, still stop loading
+        setLoading(false)
+        return
       } finally {
         setLoading(false)
       }
     }
     verifyAccessAndLoadUrl()
-  }, [filePath, itemId, itemType, supabase, hasAccess])
+  }, [filePath, itemId, itemType])
 
   // Prevent Right Click
   useEffect(() => {

@@ -102,26 +102,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session?.user?.email)
+      
       if (event === 'SIGNED_IN' && session?.user) {
         setUser(session.user)
         const profileData = await fetchProfile(session.user.id)
         setProfile(profileData)
+        console.log('Profile loaded:', profileData)
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
         setProfile(null)
-      } else if (session?.user) {
+      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
         setUser(session.user)
-        // Only fetch profile if we don't have it
-        if (!profile) {
-          const profileData = await fetchProfile(session.user.id)
-          setProfile(profileData)
-        }
+        // Refresh profile on token refresh
+        const profileData = await fetchProfile(session.user.id)
+        setProfile(profileData)
+      } else if (session?.user && !profile) {
+        setUser(session.user)
+        const profileData = await fetchProfile(session.user.id)
+        setProfile(profileData)
       }
       setIsLoading(false)
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase, fetchProfile, profile])
+  }, [supabase, fetchProfile])
 
   // Computed role checks
   const isAdmin = profile?.role === 'admin'

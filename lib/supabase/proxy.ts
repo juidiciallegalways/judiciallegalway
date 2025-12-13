@@ -34,14 +34,37 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Check if user is admin - with retry logic
+    let profile = null
+    let retries = 0
+    while (!profile && retries < 3) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+      
+      if (data) {
+        profile = data
+        break
+      }
+      
+      if (retries < 2) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+        retries++
+      } else {
+        break
+      }
+    }
 
-    if (!profile || profile.role !== 'admin') {
+    // If no profile exists, let the page handle it (it will create one)
+    if (!profile) {
+      return supabaseResponse
+    }
+
+    // Only redirect if we're sure they're not admin
+    if (profile.role !== 'admin') {
+      console.log('Admin access denied:', user.email, 'Role:', profile.role)
       const url = request.nextUrl.clone()
       url.pathname = '/'
       url.searchParams.set('error', 'admin_access_required')

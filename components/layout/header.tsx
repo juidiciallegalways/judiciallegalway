@@ -113,23 +113,27 @@ export function Header() {
           </Button>
 
           {/* User Profile */}
-          {!mounted || isLoading ? (
-            // Loading skeleton to prevent flash
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 bg-muted animate-pulse rounded-full" />
-              <div className="h-4 w-16 bg-muted animate-pulse rounded hidden sm:block" />
-            </div>
-          ) : user ? (
+          {!mounted ? null : !user ? (
+            <Button asChild size="sm" className="rounded-full px-6 shadow-md">
+              <Link href="/auth/login">Get Started</Link>
+            </Button>
+          ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="gap-2 rounded-full pl-1 pr-3 border-muted-foreground/20">
                   <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center text-xs text-primary-foreground font-bold">
                     {user.email?.[0].toUpperCase()}
                   </div>
+                  <span className="hidden sm:inline text-sm">{profile?.full_name || user.email?.split('@')[0]}</span>
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5 text-sm">
+                  <p className="font-medium">{user.email}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{profile?.role || 'student'}</p>
+                </div>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild><Link href="/profile"><User className="mr-2 h-4 w-4"/> Profile</Link></DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild><Link href="/admin"><Settings className="mr-2 h-4 w-4"/> Admin Panel</Link></DropdownMenuItem>
@@ -141,8 +145,6 @@ export function Header() {
                 <DropdownMenuItem onClick={handleSignOut} className="text-red-600"><LogOut className="mr-2 h-4 w-4"/> Sign Out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : (
-            <Button asChild size="sm" className="rounded-full px-6 shadow-md"><Link href="/auth/login">Get Started</Link></Button>
           )}
 
           {/* Mobile Menu */}

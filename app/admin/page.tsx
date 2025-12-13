@@ -39,20 +39,10 @@ export default async function AdminPage() {
     .eq("id", user.id)
     .maybeSingle()
 
-  // If profile doesn't exist, create it with student role
+  // If profile doesn't exist, redirect to home
   if (!profile) {
-    const { error: insertError } = await supabase.from("profiles").insert({
-      id: user.id,
-      email: user.email || '',
-      role: "student"
-    })
-    
-    if (insertError) {
-      console.error("Failed to create profile:", insertError)
-    }
-    
-    // Redirect to home with message - user needs admin role set
-    redirect("/?error=profile_created_contact_admin")
+    console.error("No profile found for user:", user.id, user.email)
+    redirect("/?error=no_profile_found")
   }
 
   // Check admin role - be more lenient, log for debugging

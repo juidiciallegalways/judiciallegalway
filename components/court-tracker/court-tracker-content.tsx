@@ -18,16 +18,21 @@ import { toast } from "sonner"
 export interface CourtCase {
   id: string
   case_number: string
-  case_title?: string // From Admin Logic
-  petitioner?: string
-  respondent?: string
+  case_title: string
   party_names?: string[]
+  advocate_names?: string[]
   court_name: string
+  court_type?: string
+  state: string
+  judge_name?: string
   status: string
+  filing_date?: string
   next_hearing_date?: string
-  next_hearing?: string
-  last_updated?: string
-  updated_at?: string
+  disposal_date?: string
+  case_summary?: string
+  added_by?: string
+  created_at: string
+  updated_at: string
 }
 
 interface CourtTrackerContentProps {
@@ -44,8 +49,8 @@ export function CourtTrackerContent({ initialCases = [] }: CourtTrackerContentPr
   const filteredCases = cases.filter((c) => {
     const searchLower = searchQuery.toLowerCase()
     
-    // Handle variable field names from DB
-    const title = c.case_title || `${c.petitioner || ''} v. ${c.respondent || ''}`
+    // Use party_names array or case_title
+    const title = c.case_title || (c.party_names && c.party_names.length >= 2 ? `${c.party_names[0]} v. ${c.party_names[1]}` : c.case_number)
     const caseNo = c.case_number?.toLowerCase() || ""
     const court = c.court_name?.toLowerCase() || ""
 
@@ -141,7 +146,7 @@ export function CourtTrackerContent({ initialCases = [] }: CourtTrackerContentPr
                       </Badge>
                     </div>
                     <h3 className="font-serif text-lg font-semibold pt-2 leading-tight group-hover:text-primary transition-colors">
-                      {courtCase.case_title || `${courtCase.petitioner} v. ${courtCase.respondent}`}
+                      {courtCase.case_title || (courtCase.party_names && courtCase.party_names.length >= 2 ? `${courtCase.party_names[0]} v. ${courtCase.party_names[1]}` : courtCase.case_number)}
                     </h3>
                   </CardHeader>
                   
@@ -152,7 +157,7 @@ export function CourtTrackerContent({ initialCases = [] }: CourtTrackerContentPr
                     </div>
                     <div className="flex items-center gap-3 text-muted-foreground">
                       <Calendar className="h-4 w-4 shrink-0" />
-                      <span className="text-foreground font-medium">Next Hearing: {formatDate(courtCase.next_hearing || courtCase.next_hearing_date)}</span>
+                      <span className="text-foreground font-medium">Next Hearing: {formatDate(courtCase.next_hearing_date)}</span>
                     </div>
                   </CardContent>
 
@@ -166,7 +171,7 @@ export function CourtTrackerContent({ initialCases = [] }: CourtTrackerContentPr
                       <DialogContent className="max-w-2xl">
                         <DialogHeader>
                           <DialogTitle className="font-serif text-2xl pr-8">
-                            {courtCase.case_title || `${courtCase.petitioner} v. ${courtCase.respondent}`}
+                            {courtCase.case_title || (courtCase.party_names && courtCase.party_names.length >= 2 ? `${courtCase.party_names[0]} v. ${courtCase.party_names[1]}` : courtCase.case_number)}
                           </DialogTitle>
                           <p className="text-sm text-muted-foreground mt-2">
                             Case details and hearing information
@@ -186,14 +191,14 @@ export function CourtTrackerContent({ initialCases = [] }: CourtTrackerContentPr
                               <Label className="text-muted-foreground text-xs uppercase tracking-wider">Next Hearing</Label>
                               <div className="flex items-center gap-2 mt-1">
                                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium">{formatDate(courtCase.next_hearing || courtCase.next_hearing_date)}</span>
+                                <span className="font-medium">{formatDate(courtCase.next_hearing_date)}</span>
                               </div>
                             </div>
                             <div>
                               <Label className="text-muted-foreground text-xs uppercase tracking-wider">Last Updated</Label>
                               <div className="flex items-center gap-2 mt-1">
                                 <Clock className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm">{formatDate(courtCase.last_updated || courtCase.updated_at)}</span>
+                                <span className="text-sm">{formatDate(courtCase.updated_at)}</span>
                               </div>
                             </div>
                           </div>

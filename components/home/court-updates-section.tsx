@@ -35,7 +35,7 @@ export async function CourtUpdatesSection() {
                    <Badge variant="outline" className="font-mono text-xs truncate max-w-[120px] sm:max-w-none">{c.case_number}</Badge>
                    <Badge className={c.status === 'disposed' ? 'bg-green-600' : 'bg-amber-600 text-xs sm:text-sm'}>{c.status}</Badge>
                 </div>
-                <h3 className="font-medium text-sm sm:text-base md:text-lg mb-2 line-clamp-2">{c.case_title || `${c.petitioner} v. ${c.respondent}`}</h3>
+                <h3 className="font-medium text-sm sm:text-base md:text-lg mb-2 line-clamp-2">{c.case_title || (c.party_names && c.party_names.length >= 2 ? `${c.party_names[0]} v. ${c.party_names[1]}` : c.case_number)}</h3>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs sm:text-sm text-muted-foreground mt-3 sm:mt-4 gap-2">
                   <div className="flex items-center gap-1"><Gavel className="h-3 w-3" /> <span className="truncate">{c.court_name}</span></div>
                   {c.next_hearing_date && (

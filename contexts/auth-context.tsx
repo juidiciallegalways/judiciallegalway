@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch user profile from database
   const fetchProfile = useCallback(async (userId: string) => {
+    console.log('Fetching profile for userId:', userId)
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -55,20 +56,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', userId)
         .single()
 
+      console.log('Profile query result:', { data, error })
+
       if (error && error.code === 'PGRST116') {
         // Profile doesn't exist, create it
         console.log('Creating new profile for user:', userId)
-        const { data: newUser } = await supabase.auth.getUser()
         
         const { data: newProfile, error: insertError } = await supabase
           .from('profiles')
           .insert({
             id: userId,
-            email: newUser?.user?.email || '',
+            email: user?.email || '',
             role: 'student'
           })
           .select()
           .single()
+          
+        console.log('Profile creation result:', { newProfile, insertError })
           
         if (insertError) {
           console.error('Failed to create profile:', insertError)
@@ -84,12 +88,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return null
       }
 
+      console.log('Profile fetched successfully:', data)
       return data as UserProfile
     } catch (error) {
       console.error('Error fetching profile:', error)
       return null
     }
-  }, [supabase])
+  }, [supabase, user?.email])
 
   // Refresh profile data
   const refreshProfile = useCallback(async () => {

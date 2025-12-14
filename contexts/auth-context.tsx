@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Add timeout for profile fetch
           const profilePromise = fetchProfile(session.user.id)
           const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Profile fetch timeout')), 3000)
+            setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
           )
           
           try {

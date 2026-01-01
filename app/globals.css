@@ -500,3 +500,20 @@ body {
   min-height: 44px;
   padding: 12px 16px;
 }
+/* Scrolling Animation for Live Updates */
+@keyframes scroll-up {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+.animate-scroll-up {
+  animation: scroll-up 15s linear infinite;
+}
+
+.animate-scroll-up:hover {
+  animation-play-state: paused;
+}

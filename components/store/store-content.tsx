@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookLawIcon } from "@/components/icons/legal-icons"
 import { Search, ShoppingCart, IndianRupee, Package, Heart, Check, BookOpen } from "lucide-react"
 import { toast } from "sonner"
@@ -297,23 +298,21 @@ export function StoreContent({ initialBooks = [] }: StoreContentProps) {
         </div>
       </div>
 
-      {/* Category Badges - Desktop Only */}
-      <div className="hidden sm:flex flex-wrap gap-2 mb-4 sm:mb-6 px-4 sm:px-6 w-full">
-        {categories.map((category) => (
-          <motion.button
-            key={category.id}
-            onClick={() => setSelectedCategory(category.id)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-              selectedCategory === category.id
-                ? "bg-primary text-primary-foreground shadow-md"
-                : "bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground"
-            }`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {category.name}
-          </motion.button>
-        ))}
+      {/* Category Tabs - Desktop Only */}
+      <div className="hidden sm:block mb-4 sm:mb-6 px-4 sm:px-6 w-full">
+        <Tabs defaultValue="all" value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
+          <TabsList className="flex-wrap h-auto gap-2 bg-gray-50 dark:bg-gray-900 p-4 w-full justify-start">
+            {categories.map((category) => (
+              <TabsTrigger 
+                key={category.id} 
+                value={category.id}
+                className="px-6 py-2.5 rounded-full text-sm font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20"
+              >
+                {category.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* Results Count */}

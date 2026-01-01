@@ -218,15 +218,7 @@ export function HeroSection() {
             >
               {/* Main Card */}
               <motion.div 
-                className="glass rounded-xl p-8 shadow-2xl"
-                animate={enableAnimations ? {
-                  y: [0, -10, 0],
-                } : undefined}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
+                className="glass rounded-xl p-7 shadow-2xl w-full max-w-lg"
                 whileHover={enableAnimations ? {
                   y: -15,
                   boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
@@ -235,8 +227,8 @@ export function HeroSection() {
               >
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
-                      <ScalesIcon className="h-7 w-7 text-primary-foreground" />
+                    <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary">
+                      <ScalesIcon className="h-6 w-6 text-primary-foreground" />
                     </div>
                     <div>
                       <h3 className="font-serif font-bold text-foreground">Supreme Court</h3>
@@ -246,87 +238,41 @@ export function HeroSection() {
                   <Badge className="bg-green-500/10 text-green-600">Live</Badge>
                 </div>
 
-                {/* Mock Case List */}
-                <div className="space-y-4">
-                  {[
-                    { case: "WP(C) 2024/1234", status: "Hearing Today", color: "bg-destructive" },
-                    { case: "SLP(Crl) 2024/567", status: "Pending", color: "bg-amber-500" },
-                    { case: "CA 2024/890", status: "Disposed", color: "bg-green-500" },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between rounded-lg bg-background/50 p-4">
-                      <div>
-                        <p className="font-medium text-foreground">{item.case}</p>
-                        <p className="text-sm text-muted-foreground">Delhi High Court</p>
+                {/* Mock Case List with Scrolling Animation */}
+                <div className="h-96 overflow-hidden relative">
+                  <div className="animate-scroll-up">
+                    {[
+                      { case: "WP(C) 2024/1234", status: "Hearing Today", color: "bg-destructive" },
+                      { case: "SLP(Crl) 2024/567", status: "Pending", color: "bg-amber-500" },
+                      { case: "CA 2024/890", status: "Disposed", color: "bg-green-500" },
+                      { case: "PIL 2024/445", status: "Listed", color: "bg-blue-500" },
+                      { case: "CRL.A 2024/223", status: "Hearing Today", color: "bg-destructive" },
+                      { case: "WP(C) 2024/1234", status: "Hearing Today", color: "bg-destructive" },
+                      { case: "SLP(Crl) 2024/567", status: "Pending", color: "bg-amber-500" },
+                      { case: "CA 2024/890", status: "Disposed", color: "bg-green-500" },
+                      { case: "PIL 2024/445", status: "Listed", color: "bg-blue-500" },
+                      { case: "CRL.A 2024/223", status: "Hearing Today", color: "bg-destructive" },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center justify-between rounded-lg bg-background/50 p-4 mb-3 flex-shrink-0">
+                        <div className="flex-1 min-w-0 mr-3">
+                          <p className="font-medium text-foreground">{item.case}</p>
+                          <p className="text-sm text-muted-foreground">Delhi High Court</p>
+                        </div>
+                        <Badge variant="secondary" className={`${item.color} text-white flex-shrink-0`}>
+                          {item.status}
+                        </Badge>
                       </div>
-                      <Badge variant="secondary" className={`${item.color} text-white`}>
-                        {item.status}
-                      </Badge>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
 
-                <Button className="mt-6 w-full gap-2 bg-transparent" variant="outline">
+                <Button className="mt-5 w-full gap-2 bg-transparent" variant="outline">
                   View All Cases
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </motion.div>
 
-              {/* Floating Elements */}
-              <motion.div 
-                className="absolute -right-4 -top-4 glass rounded-xl p-4 shadow-lg"
-                animate={enableAnimations ? {
-                  y: [0, -8, 0],
-                } : undefined}
-                transition={{
-                  duration: 3.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.5
-                }}
-                whileHover={enableAnimations ? {
-                  y: -12,
-                  boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.25)",
-                  transition: { duration: 0.3 }
-                } : undefined}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent">
-                    <Play className="h-5 w-5 text-accent-foreground" fill="currentColor" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">Video Lectures</p>
-                    <p className="text-sm text-muted-foreground">500+ Hours</p>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div 
-                className="absolute -bottom-4 -left-4 glass rounded-xl p-4 shadow-lg"
-                animate={enableAnimations ? {
-                  y: [0, -8, 0],
-                } : undefined}
-                transition={{
-                  duration: 3.8,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 1
-                }}
-                whileHover={enableAnimations ? {
-                  y: -12,
-                  boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.25)",
-                  transition: { duration: 0.3 }
-                } : undefined}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-                    <ShieldCheckIcon className="h-5 w-5 text-primary-foreground" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">Secure DRM</p>
-                    <p className="text-sm text-muted-foreground">Protected Access</p>
-                  </div>
-                </div>
-              </motion.div>
+              {/* Floating Elements - Removed Video Lectures and Secure DRM */}
             </div>
           </div>
         </div>

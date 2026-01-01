@@ -207,7 +207,7 @@ export function HeroSection() {
           </div>
 
           {/* Visual */}
-          <div className="relative hidden lg:block">
+          <div className="relative hidden lg:block ml-8">
             <div 
               ref={cardRef as React.RefObject<HTMLDivElement>}
               className="relative"
@@ -239,19 +239,19 @@ export function HeroSection() {
                 </div>
 
                 {/* Mock Case List with Scrolling Animation */}
-                <div className="h-96 overflow-hidden relative">
+                <div className="h-80 overflow-hidden relative">
                   <div className="animate-scroll-up">
                     {[
-                      { case: "WP(C) 2024/1234", status: "Hearing Today", color: "bg-destructive" },
-                      { case: "SLP(Crl) 2024/567", status: "Pending", color: "bg-amber-500" },
-                      { case: "CA 2024/890", status: "Disposed", color: "bg-green-500" },
-                      { case: "PIL 2024/445", status: "Listed", color: "bg-blue-500" },
-                      { case: "CRL.A 2024/223", status: "Hearing Today", color: "bg-destructive" },
-                      { case: "WP(C) 2024/1234", status: "Hearing Today", color: "bg-destructive" },
-                      { case: "SLP(Crl) 2024/567", status: "Pending", color: "bg-amber-500" },
-                      { case: "CA 2024/890", status: "Disposed", color: "bg-green-500" },
-                      { case: "PIL 2024/445", status: "Listed", color: "bg-blue-500" },
-                      { case: "CRL.A 2024/223", status: "Hearing Today", color: "bg-destructive" },
+                      { case: "WP(C) 2024/1234", status: "Hearing Today", color: "bg-slate-700" },
+                      { case: "SLP(Crl) 2024/567", status: "Pending", color: "bg-slate-500" },
+                      { case: "CA 2024/890", status: "Disposed", color: "bg-slate-600" },
+                      { case: "PIL 2024/445", status: "Listed", color: "bg-primary" },
+                      { case: "CRL.A 2024/223", status: "Hearing Today", color: "bg-slate-700" },
+                      { case: "WP(C) 2024/1234", status: "Hearing Today", color: "bg-slate-700" },
+                      { case: "SLP(Crl) 2024/567", status: "Pending", color: "bg-slate-500" },
+                      { case: "CA 2024/890", status: "Disposed", color: "bg-slate-600" },
+                      { case: "PIL 2024/445", status: "Listed", color: "bg-primary" },
+                      { case: "CRL.A 2024/223", status: "Hearing Today", color: "bg-slate-700" },
                     ].map((item, i) => (
                       <div key={i} className="flex items-center justify-between rounded-lg bg-background/50 p-4 mb-3 flex-shrink-0">
                         <div className="flex-1 min-w-0 mr-3">
@@ -266,7 +266,7 @@ export function HeroSection() {
                   </div>
                 </div>
 
-                <Button className="mt-5 w-full gap-2 bg-transparent" variant="outline">
+                <Button className="mt-4 w-full gap-2 bg-transparent" variant="outline">
                   View All Cases
                   <ArrowRight className="h-4 w-4" />
                 </Button>

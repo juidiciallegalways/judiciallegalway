@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { motion, AnimatePresence, PanInfo } from "framer-motion"
+import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -156,19 +156,9 @@ export function FeaturedCarousel() {
     return () => clearInterval(timer)
   }, [maxIndex, isHovered, isInViewport, lastInteractionTime])
 
-  // Handle drag end for swipe support
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const threshold = 50
-    if (info.offset.x < -threshold && currentIndex < maxIndex) {
-      nextSlide()
-    } else if (info.offset.x > threshold && currentIndex > 0) {
-      prevSlide()
-    }
-  }
-
   return (
     <section className="py-12 md:py-16" ref={carouselRef}>
-      <div className="container mx-auto px-4 lg:px-8">
+      <div className="container mx-auto px-4 lg:px-8 xl:px-12">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="font-serif text-3xl font-bold text-foreground">Featured Case Files & Updates</h2>
@@ -176,23 +166,41 @@ export function FeaturedCarousel() {
               Explore landmark judgments and latest court updates
             </p>
           </div>
+          
+          {/* Desktop navigation in header */}
           <div className="hidden sm:flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={prevSlide} disabled={currentIndex === 0}>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={prevSlide} 
+              disabled={currentIndex === 0}
+              className="h-10 w-10 rounded-full"
+            >
               <ChevronLeft className="h-4 w-4" />
               <span className="sr-only">Previous</span>
             </Button>
-            <Button variant="outline" size="icon" onClick={nextSlide} disabled={currentIndex >= maxIndex}>
+            
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={nextSlide} 
+              disabled={currentIndex >= maxIndex}
+              className="h-10 w-10 rounded-full"
+            >
               <ChevronRight className="h-4 w-4" />
               <span className="sr-only">Next</span>
             </Button>
           </div>
         </div>
+      </div>
 
-        <div 
-          className="overflow-hidden carousel-container -mx-4 px-4 sm:mx-0 sm:px-0"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
+      <div className={`${itemsPerView === 1 ? 'px-4' : 'px-4 lg:px-8 xl:px-12'}`}>
+        <div className="relative">
+          <div 
+            className="overflow-hidden carousel-container"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
           {isInitialLoad && imagesLoading ? (
             <CarouselSkeleton itemsPerView={itemsPerView} />
           ) : (
@@ -202,25 +210,28 @@ export function FeaturedCarousel() {
               transition={{ duration: 0.5 }}
             >
               <motion.div
-            className="flex gap-4 sm:gap-6"
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.2}
-            onDragEnd={handleDragEnd}
-            animate={{
-              x: `-${currentIndex * (100 / itemsPerView)}%`,
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 30,
-            }}
-          >
+                className={`flex ${itemsPerView === 1 ? 'gap-0' : 'gap-6'}`}
+                animate={{
+                  x: `-${currentIndex * (100 / itemsPerView)}%`,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30,
+                  mass: 0.8,
+                }}
+              >
             {featuredItems.map((item) => (
               <motion.div
                 key={item.id}
-                className="flex-shrink-0 px-2 sm:px-0"
-                style={{ width: itemsPerView === 1 ? 'calc(100% - 16px)' : `calc(${100 / itemsPerView}% - ${((itemsPerView - 1) * 24) / itemsPerView}px)` }}
+                className="flex-shrink-0"
+                style={{ 
+                  width: itemsPerView === 1 
+                    ? '100%' 
+                    : itemsPerView === 2 
+                    ? 'calc(50% - 12px)' 
+                    : 'calc(33.333% - 16px)'
+                }}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -264,21 +275,32 @@ export function FeaturedCarousel() {
               </motion.div>
             </motion.div>
           )}
-        </div>
+          </div>
 
-        {/* Dots Indicator */}
-        <div className="flex justify-center gap-2 mt-6 sm:hidden">
-          {Array.from({ length: maxIndex + 1 }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                setCurrentIndex(i)
-                setLastInteractionTime(Date.now())
-              }}
-              className={`h-2 w-2 rounded-full transition-colors touch-target ${i === currentIndex ? "bg-primary" : "bg-border"}`}
-              aria-label={`Go to slide ${i + 1}`}
-            />
-          ))}
+          {/* Mobile navigation - visible on smaller screens */}
+          <div className="flex sm:hidden items-center justify-center gap-4 mt-6">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={prevSlide} 
+              disabled={currentIndex === 0}
+              className="h-10 w-10 rounded-full"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="sr-only">Previous</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={nextSlide} 
+              disabled={currentIndex >= maxIndex}
+              className="h-10 w-10 rounded-full"
+            >
+              <ChevronRight className="h-4 w-4" />
+              <span className="sr-only">Next</span>
+            </Button>
+          </div>
         </div>
       </div>
     </section>

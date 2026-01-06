@@ -55,7 +55,6 @@ const testimonialVariants = {
     x: 0,
     transition: {
       duration: 0.6,
-      ease: "easeOut",
     },
   },
   exit: {
@@ -64,7 +63,6 @@ const testimonialVariants = {
     x: -50,
     transition: {
       duration: 0.6,
-      ease: "easeIn",
     },
   },
 }
@@ -85,7 +83,7 @@ const contentItem = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4, ease: "easeOut" },
+    transition: { duration: 0.4 },
   },
 }
 
@@ -111,10 +109,31 @@ export function Testimonials() {
         </div>
 
         <div className="relative mx-auto max-w-4xl">
+          {/* Navigation arrows positioned outside the testimonial card */}
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={prevTestimonial} 
+            className="absolute -left-12 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white/90 hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 hidden lg:flex"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span className="sr-only">Previous testimonial</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={nextTestimonial} 
+            className="absolute -right-12 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full bg-white/90 hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200 hidden lg:flex"
+          >
+            <ChevronRight className="h-4 w-4" />
+            <span className="sr-only">Next testimonial</span>
+          </Button>
+
           {/* Main Testimonial Card */}
           <motion.div
             whileHover={{ y: -4 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.3 }}
           >
             <Card className="glass border-0 shadow-xl group hover:shadow-2xl transition-shadow duration-300 overflow-hidden rounded-xl">
               <CardContent className="p-4 sm:p-6 md:p-8 lg:p-12">
@@ -199,49 +218,28 @@ export function Testimonials() {
             </Card>
           </motion.div>
 
-          {/* Navigation */}
-          <div className="flex items-center justify-center gap-3 sm:gap-4 mt-6 md:mt-8">
-            <Button variant="outline" size="icon" onClick={prevTestimonial} className="h-8 w-8 sm:h-10 sm:w-10">
-              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+          {/* Mobile navigation - visible on smaller screens */}
+          <div className="flex lg:hidden items-center justify-center gap-4 mt-6">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={prevTestimonial} 
+              className="h-10 w-10 rounded-full"
+            >
+              <ChevronLeft className="h-4 w-4" />
               <span className="sr-only">Previous testimonial</span>
             </Button>
-
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              {testimonials.map((_, i) => (
-                <motion.button
-                  key={i}
-                  onClick={() => setCurrentIndex(i)}
-                  className={`h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full transition-all duration-300 ${
-                    i === currentIndex ? "bg-primary" : "bg-border"
-                  }`}
-                  aria-label={`Go to testimonial ${i + 1}`}
-                  whileHover={{ scale: 1.1 }}
-                  animate={{
-                    scale: i === currentIndex ? 1.2 : 1,
-                  }}
-                  style={{
-                    animation: i === currentIndex ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' : 'none',
-                  }}
-                />
-              ))}
-            </div>
-
-            <Button variant="outline" size="icon" onClick={nextTestimonial} className="h-8 w-8 sm:h-10 sm:w-10">
-              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+            
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={nextTestimonial} 
+              className="h-10 w-10 rounded-full"
+            >
+              <ChevronRight className="h-4 w-4" />
               <span className="sr-only">Next testimonial</span>
             </Button>
           </div>
-          
-          <style jsx>{`
-            @keyframes pulse {
-              0%, 100% {
-                opacity: 1;
-              }
-              50% {
-                opacity: 0.7;
-              }
-            }
-          `}</style>
         </div>
 
         {/* Logos/Trust Badges */}

@@ -13,46 +13,49 @@ export const metadata = {
 export default async function CaseFilesPage() {
   const supabase = await createClient()
 
-  // Fetch data on the server
-  const { data: caseFiles } = await supabase
-    .from("case_files")
-    .select("*")
-    .eq("is_published", true)
-    .order("created_at", { ascending: false })
+  try {
+    // Fetch data on the server
+    const { data: caseFiles, error } = await supabase
+      .from("case_files")
+      .select("*")
+      .eq("is_published", true)
+      .order("created_at", { ascending: false })
 
-  return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background to-muted/10">
-      <Header />
-      <main className="flex-1">
-        <CaseFilesHero />
-        
-        <div className="container mx-auto px-0 py-4 lg:px-8 lg:py-6">
-          <div className="mb-6 px-4 sm:px-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-foreground">
-                  Explore Case Files
-                </h2>
-                <p className="text-muted-foreground mt-2">
-                  Browse through our comprehensive collection of landmark judgments
-                </p>
-              </div>
-            </div>
-          </div>
+    if (error) {
+      console.error('Error fetching case files:', error)
+    }
 
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1">
+          <CaseFilesHero />
+          
           <Suspense fallback={
-            <div className="flex items-center justify-center py-20">
+            <div className="flex items-center justify-center py-20 bg-gray-50 dark:bg-gray-900">
               <div className="text-center">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto mb-4" />
-                <span className="text-muted-foreground">Loading case files...</span>
+                <span className="text-gray-600 dark:text-gray-300">Loading case files...</span>
               </div>
             </div>
           }>
             <CaseFilesContent initialCaseFiles={caseFiles || []} />
           </Suspense>
-        </div>
-      </main>
-      <Footer />
-    </div>
-  )
+        </main>
+        <Footer />
+      </div>
+    )
+  } catch (error) {
+    console.error('Unexpected error:', error)
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1">
+          <CaseFilesHero />
+          <CaseFilesContent initialCaseFiles={[]} />
+        </main>
+        <Footer />
+      </div>
+    )
+  }
 }

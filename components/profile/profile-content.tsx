@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,43 +10,41 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/contexts/auth-context"
 import {
-  User,
-  ShoppingBag,
   Bookmark,
-  Activity,
-  Settings,
   LogOut,
   Edit2,
   Save,
-  X,
   BookOpen,
   FileText,
   Clock,
-  TrendingUp,
   Award,
-  Target,
   Scale,
   Gavel,
 } from "lucide-react"
 
-interface Profile {
-  id: string
-  full_name: string
-  email: string
-  phone: string
-  avatar_url: string
-  role: string
-}
-
 export function ProfileContent() {
   const router = useRouter()
   const { user, profile: authProfile, refreshProfile, isLoading } = useAuth()
+  const supabase = createClient()
+  
+  // All hooks must be called at the top level, before any early returns
+  const [isEditing, setIsEditing] = useState(false)
+  const [purchases, setPurchases] = useState<any[]>([])
+  const [savedCases, setSavedCases] = useState<any[]>([])
+  const [progress, setProgress] = useState<any[]>([])
+  const [activityLogs, setActivityLogs] = useState<any[]>([])
+  const [subscription, setSubscription] = useState<any>(null)
+  const [purchasedItems, setPurchasedItems] = useState<any[]>([])
+  const [formData, setFormData] = useState({
+    full_name: "",
+    phone: "",
+    avatar_url: "",
+  })
   
   // Debug logging
   useEffect(() => {
@@ -69,45 +66,8 @@ export function ProfileContent() {
       }
     }
   }, [user, authProfile, isLoading])
-  const [isEditing, setIsEditing] = useState(false)
-  const [purchases, setPurchases] = useState<any[]>([])
-  const [savedCases, setSavedCases] = useState<any[]>([])
-  const [progress, setProgress] = useState<any[]>([])
-  const [activityLogs, setActivityLogs] = useState<any[]>([])
-  const [subscription, setSubscription] = useState<any>(null)
-  const [purchasedItems, setPurchasedItems] = useState<any[]>([])
-  const [formData, setFormData] = useState({
-    full_name: "",
-    phone: "",
-    avatar_url: "",
-  })
-  const supabase = createClient()
 
-  // Show loading state while auth is loading
-  if (isLoading) {
-    return (
-      <div className="w-full max-w-7xl mx-auto px-4 py-8 lg:px-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded mb-6 w-48"></div>
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-1">
-              <div className="h-64 bg-muted rounded"></div>
-            </div>
-            <div className="lg:col-span-2">
-              <div className="h-96 bg-muted rounded"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Redirect if not authenticated
-  if (!user) {
-    router.push("/auth/login")
-    return null
-  }
-
+  // Update form data when profile changes
   useEffect(() => {
     if (authProfile) {
       setFormData({
@@ -118,6 +78,7 @@ export function ProfileContent() {
     }
   }, [authProfile])
 
+  // Fetch user data when user is available
   useEffect(() => {
     if (!user) {
       console.log('No user found in auth context')
@@ -127,7 +88,6 @@ export function ProfileContent() {
     console.log('User authenticated:', user.id, user.email)
     
     async function fetchUserData() {
-      const supabase = createClient()
       const userId = user!.id
 
       const [purchasesRes, savedRes, caseProgressRes, bookProgressRes, logsRes, subRes] = await Promise.all([
@@ -181,9 +141,18 @@ export function ProfileContent() {
 
       // Fetch purchased items details
       if (purchasesRes.data && purchasesRes.data.length > 0) {
-        const items: { id: string; title: string; type: string; link: string }[] = []
+        const items: { id: string; originalId: string; title: string; type: string; link: string; purchaseDate: string }[] = []
+        const seenItems = new Set<string>() // Track unique items by type-id combination
         
         for (const purchase of purchasesRes.data) {
+          const itemKey = `${purchase.item_type}-${purchase.item_id}`
+          
+          // Skip if we've already processed this item
+          if (seenItems.has(itemKey)) {
+            continue
+          }
+          seenItems.add(itemKey)
+          
           if (purchase.item_type === 'book') {
             const { data: book } = await supabase
               .from('books')
@@ -191,7 +160,14 @@ export function ProfileContent() {
               .eq('id', purchase.item_id)
               .single()
             if (book) {
-              items.push({ id: book.id, title: book.title, type: 'book', link: `/store/read/${book.id}` })
+              items.push({ 
+                id: `book-${book.id}-${Date.now()}`, // ← Unique key with timestamp
+                originalId: book.id,
+                title: book.title, 
+                type: 'book', 
+                link: `/reader/${book.id}`,
+                purchaseDate: purchase.created_at
+              })
             }
           } else if (purchase.item_type === 'case_file') {
             const { data: caseFile } = await supabase
@@ -200,7 +176,14 @@ export function ProfileContent() {
               .eq('id', purchase.item_id)
               .single()
             if (caseFile) {
-              items.push({ id: caseFile.id, title: caseFile.title, type: 'case_file', link: `/reader/${caseFile.id}` })
+              items.push({ 
+                id: `case_file-${caseFile.id}-${Date.now()}`, // ← Unique key with timestamp
+                originalId: caseFile.id,
+                title: caseFile.title, 
+                type: 'case_file', 
+                link: `/reader/${caseFile.id}`,
+                purchaseDate: purchase.created_at
+              })
             }
           }
         }
@@ -210,12 +193,12 @@ export function ProfileContent() {
     }
     
     fetchUserData()
-  }, [user])
+  }, [user, supabase])
 
+  // Handler functions
   const handleSave = async () => {
     if (!user) return
     
-    const supabase = createClient()
     const { error } = await supabase.from("profiles").upsert({
       id: user.id,
       ...formData,
@@ -234,7 +217,6 @@ export function ProfileContent() {
   const handleSignOut = async () => {
     if (!user) return
     
-    const supabase = createClient()
     await supabase.auth.signOut()
     router.push("/")
   }
@@ -243,6 +225,31 @@ export function ProfileContent() {
     progress.reduce((acc, p) => {
       return acc + Math.round((p.current_page / p.total_pages) * 100)
     }, 0) / (progress.length || 1)
+
+  // Show loading state while auth is loading
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-7xl mx-auto px-4 py-8 lg:px-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-muted rounded mb-6 w-48"></div>
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+              <div className="h-64 bg-muted rounded"></div>
+            </div>
+            <div className="lg:col-span-2">
+              <div className="h-96 bg-muted rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Redirect if not authenticated
+  if (!user) {
+    router.push("/auth/login")
+    return null
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-4 sm:py-8 lg:px-8 overflow-hidden">
@@ -457,7 +464,7 @@ export function ProfileContent() {
                               </Badge>
                             </div>
                             <p className="text-xs sm:text-sm text-muted-foreground">
-                              Purchased on {new Date(purchases.find(p => p.item_id === item.id)?.created_at || '').toLocaleDateString()}
+                              Purchased on {new Date(item.purchaseDate).toLocaleDateString()}
                             </p>
                           </div>
                           <Button variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm" asChild>

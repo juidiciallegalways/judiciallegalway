@@ -6,8 +6,8 @@ import { notFound } from "next/navigation"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
   
+  const supabase = await createClient()
   const { data: caseFile } = await supabase
     .from('case_files')
     .select('title, description, case_number, court_name, category, price')
@@ -25,21 +25,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `${caseFile.title} | Judicially Legal Ways`,
     description: caseFile.description || `Access landmark case ${caseFile.case_number} from ${caseFile.court_name} - ${caseFile.category} legal document.`,
-    openGraph: {
-      title: caseFile.title,
-      description: caseFile.description,
-      type: 'article',
-      price: caseFile.price?.toString() || '0',
-      currency: 'INR',
-    },
   }
 }
 
 export default async function CaseFilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
   
-  // Fetch Real Data
+  const supabase = await createClient()
   const { data: caseFile, error } = await supabase
     .from('case_files')
     .select('*')

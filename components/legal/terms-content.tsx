@@ -64,7 +64,7 @@ export function TermsContent() {
           <section className="mb-8">
             <h2 className="font-serif text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
               <Shield className="h-6 w-6 text-primary" />
-              2. USER ELIGIBILITY AND ACCOUNT SECURITY
+              2. USER ELIGIBILITY, ACCOUNT SECURITY & DATA COLLECTION
             </h2>
             <div className="space-y-4 text-muted-foreground">
               <p>
@@ -73,8 +73,47 @@ export function TermsContent() {
               <p>
                 <strong>2.2. User Personas:</strong> The Platform caters to distinct user roles including Law Students, Advocates, and Researchers. You agree to provide accurate professional details (e.g., Bar Council Enrollment Number, University Name) during registration to access role-specific features.
               </p>
+
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 my-6">
+                <h3 className="font-bold text-blue-800 mb-2">📋 MANDATORY DATA COLLECTION FOR DRM PROTECTION</h3>
+                <p className="text-blue-700 text-sm">
+                  For intellectual property protection and legal compliance, we collect and display the following data:
+                </p>
+              </div>
+
               <p>
-                <strong>2.3. Account Security (Supabase Auth):</strong>
+                <strong>2.3. REQUIRED PERSONAL INFORMATION:</strong> During registration and platform usage, you must provide:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 bg-blue-50 p-4 rounded">
+                <li><strong>Full Legal Name:</strong> As per government-issued ID for legal traceability</li>
+                <li><strong>Email Address:</strong> Valid email for account verification and watermarking</li>
+                <li><strong>Phone Number:</strong> OTP-verified mobile number for security</li>
+                <li><strong>Professional Details:</strong> Bar Council number, University, or Organization</li>
+                <li><strong>Address Information:</strong> For GST compliance and legal notices</li>
+              </ul>
+
+              <p>
+                <strong>2.4. AUTOMATIC DATA COLLECTION:</strong> The Platform automatically collects:
+              </p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><strong>IP Address:</strong> Real-time IP for location tracking and watermarking</li>
+                <li><strong>Device Information:</strong> Browser, OS, screen resolution, device fingerprint</li>
+                <li><strong>Session Data:</strong> Login times, access patterns, content viewed</li>
+                <li><strong>Behavioral Analytics:</strong> Scrolling patterns, time spent, interaction data</li>
+              </ul>
+
+              <p>
+                <strong>2.5. DATA USAGE FOR WATERMARKING:</strong> You explicitly consent that this collected data will be:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 bg-yellow-50 p-4 rounded">
+                <li><strong>Displayed as Watermarks:</strong> Overlaid on all accessed content at 10-20% opacity</li>
+                <li><strong>Logged for Security:</strong> Stored for forensic analysis and legal proceedings</li>
+                <li><strong>Shared for Legal Action:</strong> Provided to law enforcement if violations occur</li>
+                <li><strong>Retained Indefinitely:</strong> Kept for intellectual property protection purposes</li>
+              </ul>
+
+              <p>
+                <strong>2.6. Account Security (Supabase Auth):</strong>
               </p>
               <ul className="list-disc pl-6 space-y-2">
                 <li><strong>Credentials:</strong> You are responsible for maintaining the confidentiality of your login credentials (Email/Password).</li>
@@ -82,31 +121,146 @@ export function TermsContent() {
                 <li><strong>Device Tracking:</strong> To prevent unauthorized access and piracy, the Platform employs IP/device tracking and session management technologies. We reserve the right to limit the number of simultaneous active sessions or registered devices associated with your account.</li>
                 <li><strong>Suspicious Activity:</strong> If our system detects simultaneous logins from geographically disparate IP addresses or abnormal activity patterns, your account may be automatically suspended pending verification.</li>
               </ul>
+
+              <div className="bg-amber-50 border border-amber-300 p-4 rounded mt-4">
+                <p className="text-amber-800 text-sm">
+                  <strong>⚠️ IMPORTANT:</strong> By creating an account, you provide irrevocable consent for the collection, processing, and display of your personal information as described above. This consent cannot be withdrawn while maintaining platform access.
+                </p>
+              </div>
             </div>
           </section>
 
           <section className="mb-8">
             <h2 className="font-serif text-2xl font-bold text-foreground mb-4">
-              3. INTELLECTUAL PROPERTY AND DRM ENFORCEMENT
+              3. INTELLECTUAL PROPERTY AND COMPREHENSIVE DRM PROTECTION
             </h2>
             <div className="space-y-4 text-muted-foreground">
               <p>
-                <strong>3.1. Proprietary Content:</strong> All content hosted on the Platform, including but not limited to case studies, judgment breakdowns, subject notes, quizzes, the "Secure DRM-Based Reader" interface, and the underlying code (React/Next.js), is the exclusive property of the Company and is protected by Indian copyright laws.
+                <strong>3.1. Proprietary Content:</strong> All content hosted on the Platform, including but not limited to case studies, judgment breakdowns, subject notes, quizzes, books, legal documents, the "Secure DRM-Based Reader" interface, and the underlying code (React/Next.js), is the exclusive property of the Company and is protected by the Indian Copyright Act, 1957 and Information Technology Act, 2000.
               </p>
               <p>
-                <strong>3.2. Limited License:</strong> We grant you a limited, non-exclusive, non-transferable, revocable license to access and view the Content solely for personal, educational, and professional research purposes. This license does not convey any rights of ownership.
+                <strong>3.2. Limited License:</strong> We grant you a limited, non-exclusive, non-transferable, revocable license to access and view the Content solely for personal, educational, and professional research purposes. This license does not convey any rights of ownership, distribution, or sharing.
               </p>
+              
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 my-6">
+                <h3 className="font-bold text-red-800 mb-2">⚠️ CRITICAL: COMPREHENSIVE DRM AND WATERMARKING CONSENT</h3>
+                <p className="text-red-700 text-sm">
+                  BY USING THIS PLATFORM, YOU EXPLICITLY CONSENT TO THE FOLLOWING DRM PROTECTION MEASURES:
+                </p>
+              </div>
+
               <p>
-                <strong>3.3. Strict DRM Restrictions:</strong> The Platform utilizes enterprise-level Digital Rights Management (DRM) to protect its assets. You explicitly agree to the following prohibitions:
+                <strong>3.3. MANDATORY WATERMARKING CONSENT:</strong> You hereby provide explicit, informed consent for the Platform to display your personal information as watermarks on all accessed content, including but not limited to:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 bg-yellow-50 p-4 rounded">
+                <li><strong>Full Email Address:</strong> Your complete registered email address</li>
+                <li><strong>Phone Number:</strong> Your OTP-verified mobile number</li>
+                <li><strong>Full Name:</strong> Your complete registered name</li>
+                <li><strong>IP Address:</strong> Your current dynamic IP address and location</li>
+                <li><strong>License Key:</strong> Your unique user identification code</li>
+                <li><strong>Access Timestamp:</strong> Exact date, time, and session information</li>
+                <li><strong>Device Information:</strong> Browser, operating system, and device fingerprint</li>
+              </ul>
+
+              <p>
+                <strong>3.4. PURPOSE OF WATERMARKING:</strong> This personal data watermarking serves the following legitimate purposes:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>No Downloading:</strong> You shall not attempt to download, save, scrape, or archive any content for offline use, except where an "Offline Mode" is explicitly provided within the secure app environment.</li>
-                <li><strong>No Copy-Paste:</strong> You acknowledge that the "Copy" and "Paste" functionalities are disabled within the Reader to prevent extraction. You shall not attempt to bypass this restriction via browser extensions or scripts.</li>
-                <li><strong>No Screen Recording:</strong> The use of screen recording software, screen capture tools, external cameras, or any mechanism to record the visual display of the Platform is strictly prohibited. The Platform employs front-end detection logic; attempts to engage screen recording may result in the automatic blacking out of the content or immediate termination of your session.</li>
-                <li><strong>No Reverse Engineering:</strong> You shall not decompile, reverse engineer, decrypt, or attempt to derive the source code of the Obfuscated DOM content or the encrypted rendering engine.</li>
+                <li><strong>Intellectual Property Protection:</strong> To deter unauthorized sharing and distribution</li>
+                <li><strong>Legal Traceability:</strong> To identify the source of any leaked or pirated content</li>
+                <li><strong>Forensic Evidence:</strong> To provide admissible evidence in legal proceedings</li>
+                <li><strong>Security Monitoring:</strong> To detect and prevent unauthorized access patterns</li>
               </ul>
+
               <p>
-                <strong>3.4. Dynamic Watermarking Consent:</strong> You acknowledge and consent that all Content displayed to you will be overlaid with a Dynamic Watermark, which may include your Name, User ID, IP address, device information, and timestamp. This watermark is a security feature designed to deter and trace unauthorized distribution. You agree not to obscure, remove, or tamper with this watermark.
+                <strong>3.5. WATERMARK CHARACTERISTICS:</strong> You acknowledge that watermarks will be:
+              </p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><strong>Visible and Prominent:</strong> Displayed at 10-20% opacity across all content</li>
+                <li><strong>Moving/Kinetic:</strong> Watermarks will move every 8 seconds to prevent blocking</li>
+                <li><strong>Multi-Layered:</strong> Applied as background, overlay, corner blocks, and per-page markers</li>
+                <li><strong>Permanent:</strong> Cannot be disabled, removed, or obscured by users</li>
+                <li><strong>Forensically Embedded:</strong> Hidden steganographic data will remain even if visible watermarks are tampered with</li>
+              </ul>
+
+              <p>
+                <strong>3.6. STRICT DRM RESTRICTIONS:</strong> You explicitly agree to the following prohibitions under penalty of law:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 bg-red-50 p-4 rounded">
+                <li><strong>No Downloading:</strong> Attempting to download, save, scrape, or archive any content</li>
+                <li><strong>No Copy-Paste:</strong> Bypassing disabled copy functionality via any means</li>
+                <li><strong>No Screen Recording:</strong> Using any screen recording, capture, or photography tools</li>
+                <li><strong>No Watermark Tampering:</strong> Attempting to remove, obscure, blur, or modify watermarks</li>
+                <li><strong>No Sharing:</strong> Distributing, sharing, or making content available to third parties</li>
+                <li><strong>No Reverse Engineering:</strong> Attempting to bypass DRM or extract source code</li>
+                <li><strong>No Account Sharing:</strong> Sharing login credentials or allowing others to access your account</li>
+              </ul>
+
+              <div className="bg-red-100 border border-red-300 p-4 my-6 rounded">
+                <h3 className="font-bold text-red-800 mb-2">🚨 AUTOMATIC DETECTION AND RESPONSE</h3>
+                <p className="text-red-700 text-sm">
+                  The Platform employs real-time monitoring systems that will automatically:
+                </p>
+                <ul className="list-disc pl-4 mt-2 text-red-700 text-sm space-y-1">
+                  <li>Black out content when screen recording is detected</li>
+                  <li>Log all suspicious activities with your personal information</li>
+                  <li>Increase watermark intensity based on risk assessment</li>
+                  <li>Terminate sessions for policy violations</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="font-serif text-2xl font-bold text-foreground mb-4">
+              3A. LEGAL PENALTIES AND ENFORCEMENT
+            </h2>
+            <div className="space-y-4 text-muted-foreground">
+              <div className="bg-red-50 border-2 border-red-500 p-6 rounded-lg">
+                <h3 className="font-bold text-red-800 text-lg mb-4">⚖️ LIQUIDATED DAMAGES CLAUSE</h3>
+                
+                <p className="text-red-700 mb-4">
+                  <strong>UNAUTHORIZED SHARING PENALTIES:</strong> You acknowledge that unauthorized sharing, distribution, or reproduction of Platform content constitutes a material breach causing irreparable harm to the Company. You agree to pay liquidated damages as follows:
+                </p>
+
+                <div className="bg-white p-4 rounded border-l-4 border-red-600 mb-4">
+                  <ul className="space-y-2 text-red-800 font-semibold">
+                    <li>• <strong>First Violation:</strong> ₹50,000 (Fifty Thousand Rupees)</li>
+                    <li>• <strong>Repeat Violations:</strong> ₹1,00,000 (One Lakh Rupees) per incident</li>
+                    <li>• <strong>Commercial Distribution:</strong> ₹5,00,000 (Five Lakh Rupees) + Revenue Share</li>
+                  </ul>
+                </div>
+
+                <p className="text-red-700 mb-4">
+                  <strong>ADDITIONAL CONSEQUENCES:</strong>
+                </p>
+                <ul className="list-disc pl-6 space-y-2 text-red-700">
+                  <li><strong>Immediate Account Termination:</strong> Permanent ban without refund</li>
+                  <li><strong>Legal Action:</strong> Criminal and civil proceedings under applicable laws</li>
+                  <li><strong>Blacklisting:</strong> Prevention from creating new accounts</li>
+                  <li><strong>Recovery Costs:</strong> Legal fees and investigation expenses</li>
+                </ul>
+
+                <p className="text-red-700 mt-4">
+                  <strong>STATUTORY VIOLATIONS:</strong> Violations may constitute offenses under:
+                </p>
+                <ul className="list-disc pl-6 space-y-1 text-red-700 text-sm">
+                  <li>Information Technology Act, 2000 - Sections 43, 66, 72</li>
+                  <li>Indian Copyright Act, 1957 - Sections 51, 63</li>
+                  <li>Indian Penal Code, 1860 - Sections 378, 420</li>
+                </ul>
+              </div>
+
+              <p>
+                <strong>3A.1. BURDEN OF PROOF:</strong> In case of suspected violations, the presence of your watermarked personal information on any unauthorized copy shall constitute prima facie evidence of your responsibility for the breach.
+              </p>
+
+              <p>
+                <strong>3A.2. INVESTIGATION COOPERATION:</strong> You agree to fully cooperate with any investigation into content leaks, including providing device access, communication records, and sworn statements as required.
+              </p>
+
+              <p>
+                <strong>3A.3. NO LIMITATION PERIOD:</strong> The Company may pursue legal action for violations at any time, without limitation period, as intellectual property rights are perpetual.
               </p>
             </div>
           </section>
@@ -165,24 +319,73 @@ export function TermsContent() {
 
           <section className="mb-8">
             <h2 className="font-serif text-2xl font-bold text-foreground mb-4">
-              6. USER CONDUCT AND TERMINATION
+              6. USER CONDUCT, DRM VIOLATIONS, AND TERMINATION
             </h2>
             <div className="space-y-4 text-muted-foreground">
               <p>
                 <strong>6.1. Prohibited Activities:</strong> You agree not to:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Use any "robot," "spider," or other automatic device to scrape court data or content.</li>
-                <li>Share your account credentials with peers or on public forums.</li>
-                <li>Post defamatory, obscene, or illegal content in any future community forums.</li>
+                <li>Use any "robot," "spider," or other automatic device to scrape court data or content</li>
+                <li>Share your account credentials with peers or on public forums</li>
+                <li>Post defamatory, obscene, or illegal content in any future community forums</li>
+                <li>Attempt to bypass, disable, or tamper with DRM protection measures</li>
+                <li>Use screen recording, screenshot, or any capture software while accessing content</li>
+                <li>Share, distribute, or make available any Platform content to third parties</li>
+                <li>Remove, obscure, or modify watermarks in any manner</li>
               </ul>
+
+              <div className="bg-red-50 border-2 border-red-500 p-6 rounded-lg my-6">
+                <h3 className="font-bold text-red-800 text-lg mb-4">🚨 IMMEDIATE TERMINATION TRIGGERS</h3>
+                
+                <p className="text-red-700 mb-4">
+                  <strong>ZERO TOLERANCE POLICY:</strong> Your account will be immediately terminated without notice or refund if our systems detect:
+                </p>
+
+                <ul className="list-disc pl-6 space-y-2 text-red-700">
+                  <li><strong>Screen Recording Detection:</strong> Any attempt to record, capture, or photograph content</li>
+                  <li><strong>Watermark Tampering:</strong> Attempts to remove, blur, or modify watermarks</li>
+                  <li><strong>Content Sharing:</strong> Distribution of watermarked content on any platform</li>
+                  <li><strong>Multiple Device Access:</strong> Simultaneous logins from different locations</li>
+                  <li><strong>Suspicious Behavior:</strong> Rapid scrolling, bulk downloading attempts, or bot-like activity</li>
+                  <li><strong>DRM Bypass Attempts:</strong> Using tools or methods to circumvent protection measures</li>
+                </ul>
+
+                <div className="bg-white p-4 rounded border-l-4 border-red-600 mt-4">
+                  <p className="text-red-800 font-semibold">
+                    ⚖️ LEGAL CONSEQUENCES: Termination will be followed by immediate legal action and penalty enforcement as per Section 3A.
+                  </p>
+                </div>
+              </div>
+
               <p>
-                <strong>6.2. Termination:</strong> We reserve the right to suspend or terminate your account immediately, without notice or refund, if:
+                <strong>6.2. GRADUATED RESPONSE SYSTEM:</strong>
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Our systems detect screen recording or piracy attempts.</li>
-                <li>You breach the concurrent session limits.</li>
-                <li>You violate any provision of these Terms.</li>
+                <li><strong>First Warning:</strong> Account suspension for 24 hours + increased monitoring</li>
+                <li><strong>Second Warning:</strong> Account suspension for 7 days + mandatory re-verification</li>
+                <li><strong>Third Violation:</strong> Permanent termination + legal action + penalty enforcement</li>
+              </ul>
+
+              <p>
+                <strong>6.3. INVESTIGATION RIGHTS:</strong> We reserve the right to:
+              </p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Monitor all user activities in real-time</li>
+                <li>Analyze behavioral patterns using AI/ML algorithms</li>
+                <li>Conduct forensic analysis of suspected violations</li>
+                <li>Cooperate with law enforcement agencies</li>
+                <li>Preserve evidence for legal proceedings</li>
+              </ul>
+
+              <p>
+                <strong>6.4. POST-TERMINATION OBLIGATIONS:</strong> Even after termination, you remain liable for:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 bg-gray-50 p-4 rounded">
+                <li>All pending penalty payments and legal fees</li>
+                <li>Destruction of any downloaded or cached content</li>
+                <li>Cooperation with ongoing investigations</li>
+                <li>Compliance with confidentiality obligations</li>
               </ul>
             </div>
           </section>
@@ -206,18 +409,117 @@ export function TermsContent() {
 
           <section className="mb-8">
             <h2 className="font-serif text-2xl font-bold text-foreground mb-4">
-              8. DISPUTE RESOLUTION AND JURISDICTION
+              9. ACKNOWLEDGMENT, CONSENT, AND ACCEPTANCE
+            </h2>
+            <div className="space-y-4 text-muted-foreground">
+              <div className="bg-green-50 border-2 border-green-500 p-6 rounded-lg">
+                <h3 className="font-bold text-green-800 text-lg mb-4">✅ MANDATORY ACKNOWLEDGMENTS</h3>
+                
+                <p className="text-green-700 mb-4">
+                  By using this Platform, you acknowledge and confirm that you have:
+                </p>
+
+                <ul className="list-disc pl-6 space-y-2 text-green-700">
+                  <li><strong>Read and Understood:</strong> All terms, conditions, and penalties described herein</li>
+                  <li><strong>Provided Informed Consent:</strong> For collection and display of your personal information as watermarks</li>
+                  <li><strong>Accepted Financial Liability:</strong> For the liquidated damages specified in Section 3A</li>
+                  <li><strong>Agreed to Monitoring:</strong> Real-time surveillance of your platform activities</li>
+                  <li><strong>Waived Privacy Claims:</strong> Related to watermarking and DRM enforcement</li>
+                  <li><strong>Consented to Legal Action:</strong> Including criminal referrals for serious violations</li>
+                </ul>
+
+                <div className="bg-white p-4 rounded border-l-4 border-green-600 mt-4">
+                  <p className="text-green-800 font-semibold text-sm">
+                    📝 LEGAL BINDING: This electronic acceptance constitutes a legally binding agreement equivalent to a physically signed contract under the Information Technology Act, 2000.
+                  </p>
+                </div>
+              </div>
+
+              <p>
+                <strong>9.1. IRREVOCABLE CONSENT:</strong> Your consent for watermarking and data collection is irrevocable and cannot be withdrawn while maintaining platform access. Deletion of your account does not affect pending legal obligations.
+              </p>
+
+              <p>
+                <strong>9.2. PARENTAL CONSENT (For Minors):</strong> If you are under 18, your parent/guardian must also accept these terms and assume joint liability for all obligations, including financial penalties.
+              </p>
+
+              <p>
+                <strong>9.3. PROFESSIONAL ACKNOWLEDGMENT:</strong> Legal professionals acknowledge that they understand the serious nature of intellectual property violations and the potential impact on their professional standing and Bar Council registration.
+              </p>
+
+              <p>
+                <strong>9.4. UPDATES AND MODIFICATIONS:</strong> You agree to be bound by future updates to these Terms. Continued use after modifications constitutes acceptance of new terms.
+              </p>
+
+              <div className="bg-red-50 border border-red-300 p-4 rounded mt-6">
+                <p className="text-red-700 text-sm font-semibold text-center">
+                  ⚠️ IF YOU DO NOT AGREE TO ALL TERMS, INCLUDING WATERMARKING AND PENALTY CLAUSES, DO NOT USE THIS PLATFORM
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="mb-8">
+            <h2 className="font-serif text-2xl font-bold text-foreground mb-4">
+              10. DISPUTE RESOLUTION, JURISDICTION & ENFORCEMENT
             </h2>
             <div className="space-y-4 text-muted-foreground">
               <p>
-                <strong>8.1. Governing Law:</strong> These Terms shall be governed by the laws of India.
+                <strong>8.1. Governing Law:</strong> These Terms shall be governed by the laws of India, including but not limited to:
               </p>
+              <ul className="list-disc pl-6 space-y-1 text-sm">
+                <li>Information Technology Act, 2000 and IT Rules, 2021</li>
+                <li>Indian Copyright Act, 1957</li>
+                <li>Indian Contract Act, 1872</li>
+                <li>Consumer Protection Act, 2019</li>
+                <li>Digital Personal Data Protection Act, 2023</li>
+              </ul>
+
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 my-6">
+                <h3 className="font-bold text-blue-800 mb-2">⚖️ EXPEDITED LEGAL PROCEEDINGS FOR DRM VIOLATIONS</h3>
+                <p className="text-blue-700 text-sm">
+                  For intellectual property violations, the Company may seek immediate injunctive relief without prior notice.
+                </p>
+              </div>
+
               <p>
-                <strong>8.2. Arbitration:</strong> Any dispute shall be referred to a sole arbitrator appointed by the Company, with the seat of arbitration in India.
+                <strong>8.2. SPECIALIZED ARBITRATION FOR DRM DISPUTES:</strong>
               </p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><strong>Expedited Process:</strong> DRM violation disputes will be resolved through expedited arbitration within 60 days</li>
+                <li><strong>Technical Arbitrator:</strong> Arbitrator must have expertise in intellectual property and technology law</li>
+                <li><strong>Evidence Standards:</strong> Digital forensic evidence, including watermark analysis, shall be admissible</li>
+                <li><strong>Interim Relief:</strong> Arbitrator may grant immediate injunctions to prevent further violations</li>
+              </ul>
+
               <p>
-                <strong>8.3. Jurisdiction:</strong> Subject to arbitration, the courts in India shall have exclusive jurisdiction.
+                <strong>8.3. JURISDICTION AND VENUE:</strong>
               </p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><strong>Primary Jurisdiction:</strong> Courts in New Delhi, India shall have exclusive jurisdiction</li>
+                <li><strong>Alternative Jurisdiction:</strong> Company may file suit in the jurisdiction where the violation occurred</li>
+                <li><strong>International Enforcement:</strong> These Terms are enforceable in any jurisdiction where the user resides</li>
+              </ul>
+
+              <p>
+                <strong>8.4. ENFORCEMENT MECHANISMS:</strong>
+              </p>
+              <ul className="list-disc pl-6 space-y-2 bg-gray-50 p-4 rounded">
+                <li><strong>Asset Freezing:</strong> Court may freeze user assets pending resolution</li>
+                <li><strong>ISP Cooperation:</strong> Internet service providers may be directed to block access</li>
+                <li><strong>Device Seizure:</strong> Law enforcement may seize devices containing pirated content</li>
+                <li><strong>Criminal Referral:</strong> Serious violations will be referred for criminal prosecution</li>
+              </ul>
+
+              <p>
+                <strong>8.5. INTERNATIONAL COOPERATION:</strong> The Company may cooperate with international law enforcement agencies and utilize mutual legal assistance treaties for cross-border enforcement.
+              </p>
+
+              <div className="bg-amber-50 border border-amber-300 p-4 rounded mt-4">
+                <p className="text-amber-800 text-sm">
+                  <strong>⚠️ WAIVER OF JURY TRIAL:</strong> You waive any right to trial by jury for all disputes arising under these Terms.
+                </p>
+              </div>
             </div>
           </section>
 

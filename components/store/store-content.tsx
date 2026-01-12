@@ -2,16 +2,13 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookLawIcon } from "@/components/icons/legal-icons"
-import { Search, ShoppingCart, IndianRupee, Package, Heart, Check, BookOpen } from "lucide-react"
+import { Search, ShoppingCart, IndianRupee, Star, Tag } from "lucide-react"
 import { toast } from "sonner"
 import { useCart } from "@/contexts/cart-context"
 
@@ -41,50 +38,76 @@ interface StoreContentProps {
   initialBooks: Book[]
 }
 
-const categories = [
-  { id: "all", name: "All" },
-  { id: "criminal", name: "Criminal Law" },
-  { id: "civil", name: "Civil Law" },
-  { id: "constitutional", name: "Constitutional Law" },
-  { id: "evidence", name: "Evidence Law" },
-  { id: "bundle", name: "Bundle" },
-]
-
 export function StoreContent({ initialBooks = [] }: StoreContentProps) {
-  const router = useRouter()
   const { items, addItem, cartTotal } = useCart()
   
-  // Initialize with Server Data
-  const [books] = useState<Book[]>(initialBooks)
+  // Dummy data matching reference design
+  const dummyBooks: Book[] = [
+    {
+      id: "1",
+      title: "Criminal Law Complete Notes",
+      author: "Legal Expert",
+      description: "Comprehensive criminal law study material",
+      price: 499,
+      original_price: 999,
+      cover_url: "/criminal-law-book.jpg",
+      preview_url: null,
+      file_url: null,
+      category: "Criminal Law",
+      pages: 350,
+      isbn: null,
+      publisher: "Legal Publications",
+      is_bundle: false,
+      bundle_items: null,
+      stock: 50,
+      is_published: true,
+      created_at: "2023-01-01T00:00:00Z"
+    },
+    {
+      id: "2", 
+      title: "Constitutional Law Guide",
+      author: "Constitutional Expert",
+      description: "Complete guide to constitutional law",
+      price: 399,
+      original_price: 799,
+      cover_url: "/constitutional-law-book.jpg",
+      preview_url: null,
+      file_url: null,
+      category: "Constitutional Law",
+      pages: 280,
+      isbn: null,
+      publisher: "Legal Publications",
+      is_bundle: false,
+      bundle_items: null,
+      stock: 30,
+      is_published: true,
+      created_at: "2023-01-02T00:00:00Z"
+    },
+    {
+      id: "3",
+      title: "Case Files Bundle",
+      author: "Legal Team",
+      description: "Complete collection of important case files",
+      price: 999,
+      original_price: 1999,
+      cover_url: "/case-files-bundle.jpg",
+      preview_url: null,
+      file_url: null,
+      category: "Bundle",
+      pages: 500,
+      isbn: null,
+      publisher: "Legal Publications",
+      is_bundle: true,
+      bundle_items: ["Criminal Cases", "Civil Cases", "Constitutional Cases"],
+      stock: 25,
+      is_published: true,
+      created_at: "2023-01-03T00:00:00Z"
+    }
+  ]
+  
+  const [books] = useState<Book[]>(initialBooks.length > 0 ? initialBooks : dummyBooks)
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [sortBy, setSortBy] = useState("popular")
-  const [wishlist, setWishlist] = useState<Set<string>>(new Set())
 
-  // Filter Logic
-  const filteredBooks = books.filter((book) => {
-    const matchesSearch =
-      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      book.author.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const bookCat = book.category || "General"
-    const matchesCategory =
-      selectedCategory === "all" ||
-      bookCat.toLowerCase() === selectedCategory.toLowerCase() ||
-      (selectedCategory === "bundle" && book.is_bundle)
-
-    return matchesSearch && matchesCategory
-  })
-
-  // Sort Logic
-  const sortedBooks = [...filteredBooks].sort((a, b) => {
-    if (sortBy === "price-low") return a.price - b.price
-    if (sortBy === "price-high") return b.price - a.price
-    if (sortBy === "newest") return 0
-    return 0
-  })
-
-  // Cart & Wishlist Handlers
   const handleAddToCart = (book: Book) => {
     addItem({
       id: book.id,
@@ -93,270 +116,232 @@ export function StoreContent({ initialBooks = [] }: StoreContentProps) {
       type: 'book',
       cover_url: book.cover_url || undefined
     })
+    toast.success("Added to cart")
   }
 
-  const toggleWishlist = (bookId: string) => {
-    setWishlist((prev) => {
-      const next = new Set(prev)
-      if (next.has(bookId)) {
-        next.delete(bookId)
-        toast("Removed from wishlist")
-      } else {
-        next.add(bookId)
-        toast("Added to wishlist")
-      }
-      return next
-    })
-  }
+  const filteredBooks = books.filter((book) => {
+    return book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           book.author.toLowerCase().includes(searchQuery.toLowerCase())
+  })
 
   const cartItemCount = items.length
 
-  // Book Card Component
-  const BookCard = ({ book }: { book: Book }) => {
-    const discount = book.original_price ? Math.round((1 - book.price / book.original_price) * 100) : 0
-    const inCart = items.some(item => item.id === book.id && item.type === 'book')
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        whileHover={{ y: -8 }}
-      >
-        <Card className="group overflow-hidden hover:shadow-xl transition-all h-full flex flex-col rounded-xl">
-          <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-            <motion.img
-              src={book.cover_url || "/placeholder.svg"}
-              alt={book.title}
-              className="h-full w-full object-cover"
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.3 }}
-            />
-            {discount > 0 && (
-              <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground shadow-lg">
-                {discount}% OFF
-              </Badge>
-            )}
-            {book.is_bundle && (
-              <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground gap-1 shadow-lg">
-                <Package className="h-3 w-3" />
-                Bundle
-              </Badge>
-            )}
-            <motion.div
-              className="absolute top-3 right-3"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white shadow-lg"
-                onClick={() => toggleWishlist(book.id)}
-              >
-                <Heart className={`h-5 w-5 ${wishlist.has(book.id) ? "fill-destructive text-destructive" : ""}`} />
-              </Button>
-            </motion.div>
-
-            {book.stock < 10 && book.stock > 0 && (
-              <Badge variant="destructive" className="absolute bottom-3 left-3 shadow-lg">
-                Only {book.stock} left!
-              </Badge>
-            )}
-            {book.stock === 0 && (
-              <Badge variant="secondary" className="absolute bottom-3 left-3 shadow-lg">
-                Out of Stock
-              </Badge>
-            )}
-
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-              <motion.div
-                initial={{ scale: 0 }}
-                whileHover={{ scale: 1 }}
-                className="text-white text-center px-4"
-              >
-                <Button variant="outline" className="bg-transparent text-white border-white hover:bg-white hover:text-black" asChild>
-                  <Link href={`/store/read/${book.id}`}>
-                    <BookOpen className="mr-2 h-4 w-4" /> Read Preview
-                  </Link>
-                </Button>
-              </motion.div>
-            </div>
-          </div>
-
-          <CardContent className="p-5 flex-1 flex flex-col">
-            <Badge variant="outline" className="w-fit mb-2 text-xs">{book.category || "General"}</Badge>
-            <p className="text-sm text-muted-foreground mb-1">{book.author}</p>
-            <h3 className="font-serif font-semibold text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors" title={book.title}>
-              {book.title}
-            </h3>
-
-            {book.is_bundle && book.bundle_items && (
-              <div className="mb-3 p-2 rounded-lg bg-accent/5 border border-accent/20">
-                <p className="text-xs font-medium text-accent mb-1">Bundle Includes:</p>
-                <ul className="text-xs text-muted-foreground space-y-0.5">
-                  {book.bundle_items.slice(0, 3).map((item, i) => (
-                    <li key={i} className="flex items-center gap-1">
-                      <Check className="h-3 w-3 text-accent" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div className="mt-auto pt-3 border-t">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center">
-                  <IndianRupee className="h-5 w-5 text-foreground" />
-                  <span className="text-2xl font-bold text-foreground">{book.price}</span>
-                </div>
-                {book.original_price && book.original_price > book.price && (
-                  <span className="text-sm text-muted-foreground line-through">₹{book.original_price}</span>
-                )}
-              </div>
-            </div>
-          </CardContent>
-
-          <CardFooter className="p-5 pt-0 flex gap-2">
-            <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button 
-                className="w-full gap-2" 
-                onClick={() => handleAddToCart(book)}
-                disabled={book.stock === 0 || inCart}
-                variant={inCart ? "secondary" : "default"}
-              >
-                {inCart ? (
-                  <>
-                    <Check className="h-4 w-4" /> In Cart
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart className="h-4 w-4" /> {book.stock === 0 ? "Sold Out" : "Add to Cart"}
-                  </>
-                )}
-              </Button>
-            </motion.div>
-          </CardFooter>
-        </Card>
-      </motion.div>
-    )
-  }
+  // Generate star rating
+  const generateStars = (rating: number, reviews: number) => (
+    <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`h-4 w-4 ${
+              star <= rating
+                ? "fill-yellow-400 text-yellow-400"
+                : star - 0.5 <= rating
+                ? "fill-yellow-400/50 text-yellow-400"
+                : "text-gray-300"
+            }`}
+          />
+        ))}
+      </div>
+      <span className="text-sm text-gray-600 dark:text-gray-400">
+        {rating} ({reviews})
+      </span>
+    </div>
+  )
 
   return (
-    <div className="bg-background w-full">
-      {/* Search Bar and Controls - Mobile Responsive */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6 px-4 sm:px-6 pt-4 sm:pt-6 w-full">
-        <div className="relative flex-1 order-1 sm:order-none">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-muted/50 border-border rounded-lg h-11 sm:h-10 w-full text-sm"
-          />
-        </div>
-        <div className="flex gap-2 order-2 sm:order-none flex-1 sm:flex-none">
-          {/* Book Type Filter - Mobile Only */}
-          <div className="sm:hidden flex-1">
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="bg-muted/50 border-border rounded-lg h-11 text-sm">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Cart Button */}
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1 sm:flex-none">
-            <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg px-3 sm:px-4 h-11 sm:h-10 text-sm font-medium w-full sm:w-auto" asChild>
-              <Link href="/store/cart">
-                <ShoppingCart className="h-4 w-4" />
-                ({cartItemCount})
-              </Link>
-            </Button>
-          </motion.div>
-          
-          {/* Sort Dropdown */}
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="flex-1 sm:w-[120px] bg-muted/50 border-border rounded-lg h-11 sm:h-10 text-sm">
-              <SelectValue placeholder="Sort" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="popular">Popular</SelectItem>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="price-low">Low to High</SelectItem>
-              <SelectItem value="price-high">High to Low</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Category Tabs - Desktop Only */}
-      <div className="hidden sm:block mb-4 sm:mb-6 px-4 sm:px-6 w-full">
-        <Tabs defaultValue="all" value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-          <TabsList className="flex-wrap h-auto gap-2 bg-gray-50 dark:bg-gray-900 p-4 w-full justify-start">
-            {categories.map((category) => (
-              <TabsTrigger 
-                key={category.id} 
-                value={category.id}
-                className="px-6 py-2.5 rounded-full text-sm font-medium data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20"
-              >
-                {category.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      </div>
-
-      {/* Results Count */}
-      <div className="mb-4 sm:mb-6 px-4 sm:px-6 w-full">
-        <p className="text-sm text-muted-foreground">
-          Showing <span className="font-semibold text-foreground">{sortedBooks.length}</span> materials
-        </p>
-      </div>
-
-      {/* Content Grid */}
-      <div className="px-4 sm:px-6 pb-4 sm:pb-6 w-full">
-        <div className="bg-white dark:bg-slate-800 rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-4 sm:p-6">
-          <AnimatePresence mode="popLayout">
-            {sortedBooks.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex flex-col items-center justify-center py-16 sm:py-20 text-center w-full min-h-[300px] sm:min-h-[400px]"
-              >
-                <div className="mb-6 p-6 rounded-full bg-gray-100 dark:bg-slate-700">
-                  <BookLawIcon className="h-12 w-12 sm:h-16 sm:w-16 text-gray-600 dark:text-white" />
+    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <div className="container mx-auto px-4 lg:px-8 py-4 lg:py-8">
+        
+        {/* Featured Banner */}
+        <div className="bg-slate-800 dark:bg-slate-700 rounded-2xl p-6 lg:p-8 mb-8 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-4">
+                <Tag className="h-6 w-6 text-orange-400" />
+                <h2 className="text-2xl lg:text-3xl font-bold">
+                  Judicial Service Exam Prep Bundle
+                </h2>
+              </div>
+              <p className="text-white/80 text-base lg:text-lg mb-4 max-w-2xl">
+                Complete preparation package with all subjects, mock tests, and case files. Limited time offer!
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center">
+                  <IndianRupee className="h-6 w-6 text-orange-400" />
+                  <span className="text-3xl font-bold text-orange-400">1,499</span>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-4">No books found</h3>
-                <p className="text-gray-600 dark:text-white/70 text-base sm:text-lg px-6 max-w-md">
-                  We couldn't find any materials matching your criteria.
-                </p>
-              </motion.div>
-            ) : (
-              <motion.div
-                className="grid gap-4 sm:gap-6 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 w-full"
-                initial="hidden"
-                animate="visible"
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-                }}
+                <span className="text-lg text-white/60 line-through">₹2,999</span>
+              </div>
+            </div>
+            <div className="hidden lg:block">
+              <Button 
+                className="bg-orange-400 hover:bg-orange-500 text-white px-8 py-3 text-lg font-medium"
+                onClick={() => handleAddToCart({
+                  id: "bundle-1",
+                  title: "Judicial Service Exam Prep Bundle",
+                  author: "Legal Team",
+                  description: "Complete preparation package",
+                  price: 1499,
+                  original_price: 2999,
+                  cover_url: null,
+                  preview_url: null,
+                  file_url: null,
+                  category: "Bundle",
+                  pages: 1000,
+                  isbn: null,
+                  publisher: "Legal Publications",
+                  is_bundle: true,
+                  bundle_items: ["All Subjects", "Mock Tests", "Case Files"],
+                  stock: 100,
+                  is_published: true,
+                  created_at: "2023-01-01T00:00:00Z"
+                })}
               >
-                {sortedBooks.map((book) => (
-                  <BookCard key={book.id} book={book} />
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                Add to Cart
+              </Button>
+            </div>
+          </div>
+          {/* Mobile Add to Cart Button */}
+          <div className="lg:hidden mt-6">
+            <Button 
+              className="w-full bg-orange-400 hover:bg-orange-500 text-white py-3 text-lg font-medium"
+              onClick={() => handleAddToCart({
+                id: "bundle-1",
+                title: "Judicial Service Exam Prep Bundle",
+                author: "Legal Team",
+                description: "Complete preparation package",
+                price: 1499,
+                original_price: 2999,
+                cover_url: null,
+                preview_url: null,
+                file_url: null,
+                category: "Bundle",
+                pages: 1000,
+                isbn: null,
+                publisher: "Legal Publications",
+                is_bundle: true,
+                bundle_items: ["All Subjects", "Mock Tests", "Case Files"],
+                stock: 100,
+                is_published: true,
+                created_at: "2023-01-01T00:00:00Z"
+              })}
+            >
+              Add to Cart
+            </Button>
+          </div>
         </div>
+
+        {/* Search Bar */}
+        <div className="flex items-center gap-4 mb-8">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input
+              placeholder="Search materials, books, notes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-12 text-base bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl"
+            />
+          </div>
+          <Button 
+            className="h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+            asChild
+          >
+            <Link href="/store/cart">
+              <ShoppingCart className="h-5 w-5" />
+              ({cartItemCount})
+            </Link>
+          </Button>
+        </div>
+
+        {/* Products Grid */}
+        <AnimatePresence mode="popLayout">
+          {filteredBooks.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
+            >
+              <div className="mb-6 p-6 rounded-full bg-gray-100 dark:bg-gray-700">
+                <BookLawIcon className="h-16 w-16 text-gray-400 dark:text-gray-500" />
+              </div>
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">No books found</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-lg max-w-md">
+                Try adjusting your search criteria to find relevant materials.
+              </p>
+            </motion.div>
+          ) : (
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { staggerChildren: 0.1 }
+                }
+              }}
+            >
+              {filteredBooks.map((book, index) => {
+                const inCart = items.some(item => item.id === book.id && item.type === 'book')
+                const rating = 4.0 + (index * 0.2) // Generate different ratings
+                const reviews = 85 + (index * 15) // Generate different review counts
+                
+                return (
+                  <motion.div
+                    key={book.id}
+                    variants={{
+                      hidden: { opacity: 0, y: 20 },
+                      visible: { opacity: 1, y: 0 }
+                    }}
+                  >
+                    <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden h-full flex flex-col group">
+                      <div className="relative h-48 bg-gray-100 dark:bg-gray-700">
+                        <img
+                          src={book.cover_url || "/placeholder.svg?height=192&width=384"}
+                          alt={book.title}
+                          className="h-full w-full object-cover"
+                        />
+                        {book.original_price && book.original_price > book.price && (
+                          <Badge className="absolute top-3 right-3 bg-red-500 text-white">
+                            {Math.round((1 - book.price / book.original_price) * 100)}% OFF
+                          </Badge>
+                        )}
+                      </div>
+
+                      <CardContent className="p-6 flex-1 flex flex-col">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 leading-tight line-clamp-2">
+                          {book.title}
+                        </h3>
+                        
+                        {generateStars(rating, reviews)}
+
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="flex items-center">
+                            <IndianRupee className="h-5 w-5 text-orange-500" />
+                            <span className="text-2xl font-bold text-orange-500">{book.price}</span>
+                          </div>
+                          {book.original_price && book.original_price > book.price && (
+                            <span className="text-sm text-gray-500 line-through">₹{book.original_price}</span>
+                          )}
+                        </div>
+
+                        <Button 
+                          className="w-full mt-auto bg-slate-700 hover:bg-slate-800 text-white"
+                          onClick={() => handleAddToCart(book)}
+                          disabled={inCart}
+                        >
+                          {inCart ? "In Cart" : "Add to Cart"}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )

@@ -43,6 +43,8 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
         userEmail={user.email || 'user@example.com'}
         itemId={caseFile.id}
         itemType="case_file"
+        itemTitle={caseFile.title}
+        itemData={caseFile}
       />
     )
   }
@@ -78,6 +80,8 @@ export default async function ReaderPage({ params }: { params: Promise<{ id: str
         userEmail={user.email || 'user@example.com'}
         itemId={book.id}
         itemType="book"
+        itemTitle={book.title}
+        itemData={book}
       />
     )
   }

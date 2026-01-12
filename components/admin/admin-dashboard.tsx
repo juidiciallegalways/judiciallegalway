@@ -217,33 +217,105 @@ export function AdminDashboard() {
 
   // Upload file to storage
   const uploadFile = async (file: File, folder: string = 'case-files') => {
-    const fileName = `${Date.now()}-${file.name.replace(/\s/g, '_')}`
-    const { error } = await supabase.storage.from('protected_files').upload(`${folder}/${fileName}`, file)
-    if (error) throw error
-    return `${folder}/${fileName}`
+    try {
+      const fileName = `${Date.now()}-${file.name.replace(/\s/g, '_')}`
+      console.log('Uploading file:', fileName, 'to folder:', folder)
+      
+      // Try protected_files bucket first, fallback to public bucket
+      let { data, error } = await supabase.storage
+        .from('protected_files')
+        .upload(`${folder}/${fileName}`, file)
+      
+      if (error && error.message.includes('not found')) {
+        console.log('Protected bucket not found, trying public bucket...')
+        const result = await supabase.storage
+          .from('public')
+          .upload(`${folder}/${fileName}`, file)
+        data = result.data
+        error = result.error
+      }
+      
+      if (error) {
+        console.error('File upload error:', error)
+        throw new Error(`File upload failed: ${error.message}`)
+      }
+      
+      console.log('File uploaded successfully:', data)
+      return `${folder}/${fileName}`
+    } catch (error: any) {
+      console.error('Upload file error:', error)
+      throw error
+    }
   }
 
   // Upload image
   const uploadImage = async (file: File, folder: string = 'thumbnails') => {
-    if (!file.type.startsWith('image/')) throw new Error('File must be an image')
-    const fileName = `${Date.now()}-${file.name.replace(/\s/g, '_')}`
-    const { error } = await supabase.storage.from('protected_files').upload(`${folder}/${fileName}`, file)
-    if (error) throw error
-    const { data } = supabase.storage.from('protected_files').getPublicUrl(`${folder}/${fileName}`)
-    return data.publicUrl
+    try {
+      if (!file.type.startsWith('image/')) {
+        throw new Error('File must be an image')
+      }
+      
+      const fileName = `${Date.now()}-${file.name.replace(/\s/g, '_')}`
+      console.log('Uploading image:', fileName, 'to folder:', folder)
+      
+      // Try protected_files bucket first, fallback to public bucket
+      let { data, error } = await supabase.storage
+        .from('protected_files')
+        .upload(`${folder}/${fileName}`, file)
+      
+      let bucketName = 'protected_files'
+      if (error && error.message.includes('not found')) {
+        console.log('Protected bucket not found, trying public bucket...')
+        const result = await supabase.storage
+          .from('public')
+          .upload(`${folder}/${fileName}`, file)
+        data = result.data
+        error = result.error
+        bucketName = 'public'
+      }
+      
+      if (error) {
+        console.error('Image upload error:', error)
+        throw new Error(`Image upload failed: ${error.message}`)
+      }
+      
+      const { data: publicUrlData } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(`${folder}/${fileName}`)
+      
+      console.log('Image uploaded successfully, public URL:', publicUrlData.publicUrl)
+      return publicUrlData.publicUrl
+    } catch (error: any) {
+      console.error('Upload image error:', error)
+      throw error
+    }
   }
   // Handle Case File Upload
   const handleCaseFileUpload = async () => {
     if (!file || !libForm.title || !libForm.category) {
       return toast.error("File, Title & Category are required")
     }
+    
     setUploading(true)
+    console.log('Starting case file upload...')
+    
     try {
+      // Upload main file
+      console.log('Uploading main file...')
       const filePath = await uploadFile(file, 'case-files')
-      let thumbnailUrl = "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800"
-      if (thumbnailFile) thumbnailUrl = await uploadImage(thumbnailFile, 'thumbnails')
+      console.log('Main file uploaded:', filePath)
       
-      const { error } = await supabase.from('case_files').insert({
+      // Upload thumbnail if provided
+      let thumbnailUrl = "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800"
+      if (thumbnailFile) {
+        console.log('Uploading thumbnail...')
+        thumbnailUrl = await uploadImage(thumbnailFile, 'thumbnails')
+        console.log('Thumbnail uploaded:', thumbnailUrl)
+      }
+      
+      // Insert into database
+      console.log('Inserting into database...')
+      const { data, error } = await supabase.from('case_files').insert({
         title: libForm.title,
         description: libForm.description || null,
         case_number: libForm.caseNumber || null,
@@ -267,10 +339,17 @@ export function AdminDashboard() {
         judgment_date: libForm.judgmentDate || null,
         bench: libForm.bench || null,
         state: libForm.state || null
-      })
+      }).select()
       
-      if (error) throw error
+      if (error) {
+        console.error('Database insert error:', error)
+        throw new Error(`Database error: ${error.message}`)
+      }
+      
+      console.log('Case file inserted successfully:', data)
       toast.success("Case File Published!")
+      
+      // Reset form
       setFile(null)
       setThumbnailFile(null)
       setLibForm({
@@ -280,11 +359,15 @@ export function AdminDashboard() {
         judgeName: "", petitioner: "", respondent: "", advocates: "",
         caseSummary: "", keyPoints: "", judgmentDate: "", bench: "", state: ""
       })
+      
+      // Refresh data
       fetchData()
-    } catch (e: any) { 
-      toast.error(e.message) 
-    } finally { 
-      setUploading(false) 
+      
+    } catch (error: any) {
+      console.error('Case file upload failed:', error)
+      toast.error(`Upload failed: ${error.message}`)
+    } finally {
+      setUploading(false)
     }
   }
 

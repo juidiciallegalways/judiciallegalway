@@ -6,13 +6,8 @@ import { Document, Page, pdfjs } from "react-pdf"
 import { Loader2, AlertTriangle, FileText, ZoomIn, ZoomOut, RotateCcw } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
-// Configure PDF.js worker
-if (typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerSrc) {
-  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.mjs',
-    import.meta.url,
-  ).toString()
-}
+// Configure PDF.js worker - use jsdelivr CDN which is more reliable
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 interface DRMReaderProps {
   filePath: string

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -29,8 +29,12 @@ import {
 
 export function ProfileContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, profile: authProfile, refreshProfile, isLoading } = useAuth()
   const supabase = createClient()
+  
+  // Get default tab from URL parameter or default to "overview"
+  const defaultTab = searchParams.get('tab') || 'overview'
   
   // All hooks must be called at the top level, before any early returns
   const [isEditing, setIsEditing] = useState(false)
@@ -40,33 +44,13 @@ export function ProfileContent() {
   const [activityLogs, setActivityLogs] = useState<any[]>([])
   const [subscription, setSubscription] = useState<any>(null)
   const [purchasedItems, setPurchasedItems] = useState<any[]>([])
+  const [isLoadingPurchases, setIsLoadingPurchases] = useState(true)
   const [formData, setFormData] = useState({
     full_name: "",
     phone: "",
     avatar_url: "",
   })
   
-  // Debug logging
-  useEffect(() => {
-    console.log('=== PROFILE COMPONENT DEBUG ===')
-    console.log('User:', user)
-    console.log('Profile:', authProfile)
-    console.log('Is Loading:', isLoading)
-    console.log('User email:', user?.email)
-    console.log('Profile role:', authProfile?.role)
-    console.log('Profile name:', authProfile?.full_name)
-    
-    // Make available globally
-    if (typeof window !== 'undefined') {
-      (window as any).profileDebug = {
-        user,
-        profile: authProfile,
-        isLoading,
-        refreshProfile
-      }
-    }
-  }, [user, authProfile, isLoading])
-
   // Update form data when profile changes
   useEffect(() => {
     if (authProfile) {
@@ -81,114 +65,103 @@ export function ProfileContent() {
   // Fetch user data when user is available
   useEffect(() => {
     if (!user) {
-      console.log('No user found in auth context')
       return
     }
     
-    console.log('User authenticated:', user.id, user.email)
-    
     async function fetchUserData() {
+      setIsLoadingPurchases(true)
       const userId = user!.id
 
-      const [purchasesRes, savedRes, caseProgressRes, bookProgressRes, logsRes, subRes] = await Promise.all([
-        supabase
-          .from("purchases")
-          .select("*")
-          .eq("user_id", userId)
-          .eq("payment_status", "completed")
-          .order("created_at", { ascending: false }),
-        supabase.from("saved_cases").select("*").eq("user_id", userId),
-        supabase.from("case_file_progress").select("*").eq("user_id", userId),
-        supabase.from("book_progress").select("*").eq("user_id", userId),
-        supabase
-          .from("activity_logs")
-          .select("*")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(10),
-        supabase.from("subscriptions").select("*").eq("user_id", userId).eq("status", "active").single(),
-      ])
+      try {
+        const [purchasesRes, savedRes, caseProgressRes, bookProgressRes, logsRes, subRes] = await Promise.all([
+          supabase
+            .from("purchases")
+            .select("*")
+            .eq("user_id", userId)
+            .eq("payment_status", "completed")
+            .order("created_at", { ascending: false }),
+          supabase.from("saved_cases").select("*").eq("user_id", userId),
+          supabase.from("case_file_progress").select("*").eq("user_id", userId),
+          supabase.from("book_progress").select("*").eq("user_id", userId),
+          supabase
+            .from("activity_logs")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(10),
+          supabase.from("subscriptions").select("*").eq("user_id", userId).eq("status", "active").single(),
+        ])
 
-      // Log errors if any
-      if (purchasesRes.error) console.error('Purchases error:', purchasesRes.error)
-      if (savedRes.error) console.error('Saved cases error:', savedRes.error)
-      if (caseProgressRes.error) console.error('Case progress error:', caseProgressRes.error)
-      if (bookProgressRes.error) console.error('Book progress error:', bookProgressRes.error)
-      if (logsRes.error) console.error('Activity logs error:', logsRes.error)
-      if (subRes.error && subRes.error.code !== 'PGRST116') console.error('Subscription error:', subRes.error)
+        // Log errors if any
+        if (purchasesRes.error) console.error('Purchases error:', purchasesRes.error)
+        if (savedRes.error) console.error('Saved cases error:', savedRes.error)
 
-      console.log('Profile data fetched:', {
-        userId: userId,
-        purchases: purchasesRes.data?.length || 0,
-        savedCases: savedRes.data?.length || 0,
-        caseProgress: caseProgressRes.data?.length || 0,
-        bookProgress: bookProgressRes.data?.length || 0,
-        activityLogs: logsRes.data?.length || 0,
-        subscription: subRes.data
-      })
-
-      setPurchases(purchasesRes.data || [])
-      setSavedCases(savedRes.data || [])
-      
-      // Combine case file and book progress
-      const allProgress = [
-        ...(caseProgressRes.data || []).map(p => ({ ...p, material_id: p.case_file_id })),
-        ...(bookProgressRes.data || []).map(p => ({ ...p, material_id: p.book_id }))
-      ]
-      setProgress(allProgress)
-      setActivityLogs(logsRes.data || [])
-      setSubscription(subRes.data)
-
-      // Fetch purchased items details
-      if (purchasesRes.data && purchasesRes.data.length > 0) {
-        const items: { id: string; originalId: string; title: string; type: string; link: string; purchaseDate: string }[] = []
-        const seenItems = new Set<string>() // Track unique items by type-id combination
+        setPurchases(purchasesRes.data || [])
+        setSavedCases(savedRes.data || [])
         
-        for (const purchase of purchasesRes.data) {
-          const itemKey = `${purchase.item_type}-${purchase.item_id}`
+        // Combine case file and book progress
+        const allProgress = [
+          ...(caseProgressRes.data || []).map(p => ({ ...p, material_id: p.case_file_id })),
+          ...(bookProgressRes.data || []).map(p => ({ ...p, material_id: p.book_id }))
+        ]
+        setProgress(allProgress)
+        setActivityLogs(logsRes.data || [])
+        setSubscription(subRes.data)
+
+        // Fetch purchased items details
+        if (purchasesRes.data && purchasesRes.data.length > 0) {
+          const items: { id: string; originalId: string; title: string; type: string; link: string; purchaseDate: string }[] = []
+          const seenItems = new Set<string>()
           
-          // Skip if we've already processed this item
-          if (seenItems.has(itemKey)) {
-            continue
+          for (const purchase of purchasesRes.data) {
+            const itemKey = `${purchase.item_type}-${purchase.item_id}`
+            
+            if (seenItems.has(itemKey)) {
+              continue
+            }
+            seenItems.add(itemKey)
+            
+            if (purchase.item_type === 'book') {
+              const { data: book } = await supabase
+                .from('books')
+                .select('id, title')
+                .eq('id', purchase.item_id)
+                .single()
+              if (book) {
+                items.push({ 
+                  id: `book-${book.id}-${Date.now()}-${Math.random()}`,
+                  originalId: book.id,
+                  title: book.title, 
+                  type: 'book', 
+                  link: `/reader/${book.id}`,
+                  purchaseDate: purchase.created_at
+                })
+              }
+            } else if (purchase.item_type === 'case_file') {
+              const { data: caseFile } = await supabase
+                .from('case_files')
+                .select('id, title')
+                .eq('id', purchase.item_id)
+                .single()
+              if (caseFile) {
+                items.push({ 
+                  id: `case_file-${caseFile.id}-${Date.now()}-${Math.random()}`,
+                  originalId: caseFile.id,
+                  title: caseFile.title, 
+                  type: 'case_file', 
+                  link: `/reader/${caseFile.id}`,
+                  purchaseDate: purchase.created_at
+                })
+              }
+            }
           }
-          seenItems.add(itemKey)
           
-          if (purchase.item_type === 'book') {
-            const { data: book } = await supabase
-              .from('books')
-              .select('id, title')
-              .eq('id', purchase.item_id)
-              .single()
-            if (book) {
-              items.push({ 
-                id: `book-${book.id}-${Date.now()}`, // ← Unique key with timestamp
-                originalId: book.id,
-                title: book.title, 
-                type: 'book', 
-                link: `/reader/${book.id}`,
-                purchaseDate: purchase.created_at
-              })
-            }
-          } else if (purchase.item_type === 'case_file') {
-            const { data: caseFile } = await supabase
-              .from('case_files')
-              .select('id, title')
-              .eq('id', purchase.item_id)
-              .single()
-            if (caseFile) {
-              items.push({ 
-                id: `case_file-${caseFile.id}-${Date.now()}`, // ← Unique key with timestamp
-                originalId: caseFile.id,
-                title: caseFile.title, 
-                type: 'case_file', 
-                link: `/reader/${caseFile.id}`,
-                purchaseDate: purchase.created_at
-              })
-            }
-          }
+          setPurchasedItems(items)
         }
-        
-        setPurchasedItems(items)
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+      } finally {
+        setIsLoadingPurchases(false)
       }
     }
     
@@ -323,7 +296,7 @@ export function ProfileContent() {
 
         {/* Main Content */}
         <div className="lg:col-span-2 min-w-0 w-full">
-          <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6 w-full">
+          <Tabs defaultValue={defaultTab} className="space-y-4 sm:space-y-6 w-full">
             <div className="w-full overflow-hidden pb-2 sm:overflow-visible">
               <TabsList className="grid w-full grid-cols-5 sm:flex sm:w-full sm:justify-start p-1 bg-muted rounded-lg h-auto">
                 <TabsTrigger value="overview" className="text-xs sm:text-sm px-1 sm:px-3 py-1.5 sm:py-2">
@@ -439,7 +412,20 @@ export function ProfileContent() {
                   <CardTitle className="text-base sm:text-lg">My Library</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  {purchasedItems.length === 0 ? (
+                  {isLoadingPurchases ? (
+                    <div className="space-y-4">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 animate-pulse">
+                          <div className="h-4 w-4 bg-muted-foreground/20 rounded" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-muted-foreground/20 rounded w-3/4" />
+                            <div className="h-3 bg-muted-foreground/20 rounded w-1/2" />
+                          </div>
+                          <div className="h-8 w-20 bg-muted-foreground/20 rounded" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : purchasedItems.length === 0 ? (
                     <div className="text-center py-8">
                       <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
                       <p className="text-muted-foreground mb-4">No purchased items yet</p>

@@ -48,8 +48,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Fetch user profile from database
   const fetchProfile = useCallback(async (userId: string) => {
-    console.log('Fetching profile for userId:', userId)
-    
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -57,12 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', userId)
         .single()
 
-      console.log('Profile query result:', { data, error })
-
       if (error && error.code === 'PGRST116') {
         // Profile doesn't exist, create it
-        console.log('Creating new profile for user:', userId)
-        
         const { data: newProfile, error: insertError } = await supabase
           .from('profiles')
           .insert({
@@ -73,14 +67,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .select()
           .single()
           
-        console.log('Profile creation result:', { newProfile, insertError })
-          
         if (insertError) {
           console.error('Failed to create profile:', insertError)
           return null
         }
         
-        console.log('Profile created successfully:', newProfile)
         return newProfile as UserProfile
       }
 
@@ -89,7 +80,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return null
       }
 
-      console.log('Profile fetched successfully:', data)
       return data as UserProfile
     } catch (error) {
       console.error('Error fetching profile:', error)
@@ -109,11 +99,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const initAuth = async () => {
       try {
-        console.log('Initializing auth...')
         const { data: { session } } = await supabase.auth.getSession()
         
         if (session?.user) {
-          console.log('Session found, setting user and fetching profile')
           setUser(session.user)
           
           // Add timeout for profile fetch
@@ -127,19 +115,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               profilePromise as Promise<UserProfile | null>, 
               timeoutPromise as Promise<UserProfile | null>
             ])
-            console.log('Profile data received:', profileData)
             setProfile(profileData)
           } catch (profileError) {
             console.error('Profile fetch failed:', profileError)
-            // Continue without profile - don't block the entire auth
             setProfile(null)
             
             // Retry profile fetch after a delay
             setTimeout(async () => {
-              console.log('Retrying profile fetch...')
               try {
                 const retryProfileData = await fetchProfile(session.user.id)
-                console.log('Retry profile data received:', retryProfileData)
                 setProfile(retryProfileData)
               } catch (retryError) {
                 console.error('Profile retry failed:', retryError)
@@ -147,7 +131,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }, 3000)
           }
         } else {
-          console.log('No session found')
           setUser(null)
           setProfile(null)
         }
@@ -156,7 +139,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null)
         setProfile(null)
       } finally {
-        console.log('Auth init completed, setting isLoading to false')
         setIsLoading(false)
       }
     }
@@ -167,27 +149,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', event, session?.user?.email)
-      
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log('User signed in, fetching profile...')
         setUser(session.user)
         const profileData = await fetchProfile(session.user.id)
-        console.log('Profile loaded:', profileData)
         setProfile(profileData)
         setIsLoading(false)
       } else if (event === 'SIGNED_OUT') {
-        console.log('User signed out')
         setUser(null)
         setProfile(null)
         setIsLoading(false)
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        console.log('Token refreshed, updating profile...')
         setUser(session.user)
         const profileData = await fetchProfile(session.user.id)
         setProfile(profileData)
       } else if (session?.user && !profile) {
-        console.log('Session exists but no profile, fetching...')
         setUser(session.user)
         const profileData = await fetchProfile(session.user.id)
         setProfile(profileData)
@@ -211,16 +186,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLawyer: profile?.role === 'lawyer',
     isStudent: profile?.role === 'student' || !profile,
     refreshProfile,
-  }
-
-  // Make auth context available globally for debugging
-  if (typeof window !== 'undefined') {
-    try {
-      (window as any).authContext = value
-      console.log('Auth context exposed to window:', value)
-    } catch (error) {
-      console.error('Failed to expose auth context:', error)
-    }
   }
 
   return (

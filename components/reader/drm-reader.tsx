@@ -45,6 +45,8 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
   const [authError, setAuthError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [scale, setScale] = useState(1.0)
+  const [showPageCounter, setShowPageCounter] = useState(false)
+  const [pageCounterTimeout, setPageCounterTimeout] = useState<NodeJS.Timeout | null>(null)
   const supabase = createClient()
 
   // Generate session-specific randomization
@@ -281,6 +283,14 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
     verifyAccessAndLoadUrl()
   }, [filePath, itemId, itemType])
 
+  // Show page counter when zoom changes
+  useEffect(() => {
+    setShowPageCounter(true)
+    if (pageCounterTimeout) clearTimeout(pageCounterTimeout)
+    const timeout = setTimeout(() => setShowPageCounter(false), 2000)
+    setPageCounterTimeout(timeout)
+  }, [scale])
+
   // Enhanced Security Measures with Better UX
   useEffect(() => {
     // Hide warning toast after 5 seconds
@@ -382,6 +392,12 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
           break
         }
       }
+      
+      // Show page counter on scroll
+      setShowPageCounter(true)
+      if (pageCounterTimeout) clearTimeout(pageCounterTimeout)
+      const timeout = setTimeout(() => setShowPageCounter(false), 2000)
+      setPageCounterTimeout(timeout)
     }
 
     const scrollResetInterval = setInterval(() => { scrollCount = 0 }, 10000)
@@ -530,16 +546,23 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
       )}
 
       {/* 📖 Sticky Header Bar - Website Colors (Navy Blue & Gold) */}
-      <div className="sticky top-0 z-50 bg-[#22334A] dark:bg-card text-primary-foreground dark:text-foreground px-6 py-4 flex items-center justify-between border-b border-primary/20 dark:border-border shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-accent/20 dark:bg-accent/30 rounded flex items-center justify-center">
-            <FileText className="w-4 h-4 text-accent" />
-          </div>
-          <div>
-            <h1 className="font-semibold text-lg">
-              {itemTitle || (itemType === 'book' ? 'Legal Book' : 'Case File')}
-            </h1>
-          </div>
+      <div className="sticky top-0 z-50 bg-[#22334A] dark:bg-card text-primary-foreground dark:text-foreground px-4 sm:px-6 py-4 flex items-center justify-between border-b border-primary/20 dark:border-border shadow-md">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {/* Back Button for Mobile */}
+          <button
+            onClick={() => router.push('/profile?tab=purchases')}
+            className="lg:hidden p-2 hover:bg-accent/20 dark:hover:bg-muted rounded transition-colors shrink-0"
+            title="Go Back"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          
+          {/* Document Name with Ellipsis */}
+          <h1 className="font-semibold text-base sm:text-lg truncate">
+            {itemTitle || (itemType === 'book' ? 'Legal Book' : 'Case File')}
+          </h1>
         </div>
         <div className="flex items-center gap-2">
           {/* Zoom Controls */}
@@ -572,12 +595,12 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
         </div>
       </div>
 
-      {/* 🔒 Content Protection Warning Bar - Website Colors (Gold Accent) */}
-      <div className="sticky top-[73px] z-40 bg-accent/10 dark:bg-accent/5 border-l-4 border-accent px-6 py-3 border-b border-accent/30 dark:border-accent/20">
+      {/* 🔒 Content Protection Warning Bar - NOT Sticky */}
+      <div className="bg-accent/10 dark:bg-accent/20 border-l-4 border-accent px-4 sm:px-6 py-3 border-b border-accent/30 dark:border-accent/40">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-foreground">Content Protected</span>
+          <span className="text-sm font-medium text-foreground dark:text-accent-foreground">Content Protected</span>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-xs text-muted-foreground dark:text-accent-foreground/80 mt-1">
           This document is protected and monitored. Screenshots are prohibited.
         </p>
       </div>
@@ -624,94 +647,97 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
                   className="block mx-auto"
                 />
                 
-                {/* 🔒 Clean Diagonal Watermarks Pattern - Proper Spacing */}
+                {/* 🔒 Clean Diagonal Watermarks Pattern - Better Spacing */}
                 <div className="absolute inset-0 pointer-events-none z-10">
                   
-                  {/* Diagonal Watermarks - Well Spaced Rows */}
+                  {/* Row 1 - Top Section */}
                   <div 
-                    className="absolute top-[15%] left-[10%] text-base font-medium text-muted-foreground/25"
-                    style={{ transform: `rotate(-45deg)` }}
-                  >
-                    JUDICIALLY LEGAL WAYS • {userInfo?.fullName}
-                  </div>
-                  
-                  <div 
-                    className="absolute top-[30%] left-[20%] text-base font-medium text-muted-foreground/25"
-                    style={{ transform: `rotate(-45deg)` }}
-                  >
-                    {userInfo?.email} • {userInfo?.phone}
-                  </div>
-                  
-                  <div 
-                    className="absolute top-[45%] left-[30%] text-base font-medium text-muted-foreground/25"
-                    style={{ transform: `rotate(-45deg)` }}
-                  >
-                    JUDICIALLY LEGAL WAYS • PROTECTED CONTENT
-                  </div>
-                  
-                  <div 
-                    className="absolute top-[60%] left-[40%] text-base font-medium text-muted-foreground/25"
-                    style={{ transform: `rotate(-45deg)` }}
-                  >
-                    IP: {userInfo?.realIP} • {userInfo?.userId}
-                  </div>
-                  
-                  <div 
-                    className="absolute top-[75%] left-[50%] text-base font-medium text-muted-foreground/25"
-                    style={{ transform: `rotate(-45deg)` }}
-                  >
-                    JUDICIALLY LEGAL WAYS • Page {index + 1}
-                  </div>
-
-                  {/* Additional Diagonal Lines - Offset Pattern */}
-                  <div 
-                    className="absolute top-[5%] left-[30%] text-base font-medium text-muted-foreground/20"
-                    style={{ transform: `rotate(-45deg)` }}
-                  >
-                    {userInfo?.fullName} • Session: {userInfo?.sessionId}
-                  </div>
-                  
-                  <div 
-                    className="absolute top-[20%] left-[40%] text-base font-medium text-muted-foreground/20"
-                    style={{ transform: `rotate(-45deg)` }}
-                  >
-                    JUDICIALLY LEGAL WAYS • CONFIDENTIAL
-                  </div>
-                  
-                  <div 
-                    className="absolute top-[35%] left-[50%] text-base font-medium text-muted-foreground/20"
-                    style={{ transform: `rotate(-45deg)` }}
-                  >
-                    {userInfo?.email} • {userInfo?.timestamp?.split(' ')[0]}
-                  </div>
-                  
-                  <div 
-                    className="absolute top-[50%] left-[60%] text-base font-medium text-muted-foreground/20"
-                    style={{ transform: `rotate(-45deg)` }}
-                  >
-                    JUDICIALLY LEGAL WAYS • {userInfo?.phone}
-                  </div>
-                  
-                  <div 
-                    className="absolute top-[65%] left-[70%] text-base font-medium text-muted-foreground/20"
-                    style={{ transform: `rotate(-45deg)` }}
-                  >
-                    IP: {userInfo?.realIP} • PROTECTED
-                  </div>
-
-                  {/* Corner Watermarks - Minimal */}
-                  <div 
-                    className="absolute top-[10%] left-[5%] text-sm font-medium text-muted-foreground/15"
+                    className="absolute top-[10%] left-[5%] text-base font-medium text-muted-foreground/20"
                     style={{ transform: `rotate(-45deg)` }}
                   >
                     JUDICIALLY LEGAL WAYS
                   </div>
                   
                   <div 
-                    className="absolute top-[85%] left-[15%] text-sm font-medium text-muted-foreground/15"
+                    className="absolute top-[10%] right-[15%] text-base font-medium text-muted-foreground/20"
                     style={{ transform: `rotate(-45deg)` }}
                   >
                     {userInfo?.fullName}
+                  </div>
+                  
+                  {/* Row 2 */}
+                  <div 
+                    className="absolute top-[25%] left-[15%] text-base font-medium text-muted-foreground/20"
+                    style={{ transform: `rotate(-45deg)` }}
+                  >
+                    {userInfo?.email}
+                  </div>
+                  
+                  <div 
+                    className="absolute top-[25%] right-[5%] text-base font-medium text-muted-foreground/20"
+                    style={{ transform: `rotate(-45deg)` }}
+                  >
+                    PROTECTED CONTENT
+                  </div>
+                  
+                  {/* Row 3 - Middle */}
+                  <div 
+                    className="absolute top-[40%] left-[5%] text-base font-medium text-muted-foreground/20"
+                    style={{ transform: `rotate(-45deg)` }}
+                  >
+                    {userInfo?.phone}
+                  </div>
+                  
+                  <div 
+                    className="absolute top-[40%] right-[15%] text-base font-medium text-muted-foreground/20"
+                    style={{ transform: `rotate(-45deg)` }}
+                  >
+                    JUDICIALLY LEGAL WAYS
+                  </div>
+                  
+                  {/* Row 4 */}
+                  <div 
+                    className="absolute top-[55%] left-[15%] text-base font-medium text-muted-foreground/20"
+                    style={{ transform: `rotate(-45deg)` }}
+                  >
+                    IP: {userInfo?.realIP}
+                  </div>
+                  
+                  <div 
+                    className="absolute top-[55%] right-[5%] text-base font-medium text-muted-foreground/20"
+                    style={{ transform: `rotate(-45deg)` }}
+                  >
+                    {userInfo?.userId}
+                  </div>
+                  
+                  {/* Row 5 - Bottom */}
+                  <div 
+                    className="absolute top-[70%] left-[5%] text-base font-medium text-muted-foreground/20"
+                    style={{ transform: `rotate(-45deg)` }}
+                  >
+                    JUDICIALLY LEGAL WAYS
+                  </div>
+                  
+                  <div 
+                    className="absolute top-[70%] right-[15%] text-base font-medium text-muted-foreground/20"
+                    style={{ transform: `rotate(-45deg)` }}
+                  >
+                    Session: {userInfo?.sessionId}
+                  </div>
+                  
+                  {/* Row 6 */}
+                  <div 
+                    className="absolute top-[85%] left-[15%] text-base font-medium text-muted-foreground/20"
+                    style={{ transform: `rotate(-45deg)` }}
+                  >
+                    {userInfo?.timestamp?.split(' ')[0]}
+                  </div>
+                  
+                  <div 
+                    className="absolute top-[85%] right-[5%] text-base font-medium text-muted-foreground/20"
+                    style={{ transform: `rotate(-45deg)` }}
+                  >
+                    PROTECTED
                   </div>
 
                   {/* 🔍 Forensic Corner Markers (Nearly Invisible) */}
@@ -734,14 +760,13 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
         </Document>
       </div>
 
-      {/* 📊 Page Counter (Bottom Center) - Blue Theme */}
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-30">
-        <div className="bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg border border-slate-600/30 flex items-center gap-2">
+      {/* 📊 Page Counter (Bottom Center) - Auto-hide, No User Name */}
+      <div className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 z-30 transition-opacity duration-300 ${showPageCounter ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="bg-[#22334A] dark:bg-card text-primary-foreground dark:text-foreground px-4 py-2 rounded-full shadow-lg border border-accent/20 dark:border-border flex items-center gap-2">
           <FileText className="w-4 h-4" />
           <span className="text-sm font-medium">
             Page {currentPage} of {numPages}
           </span>
-          <span className="text-xs text-white/80">• {userInfo?.fullName}</span>
         </div>
       </div>
 

@@ -133,6 +133,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error('Profile fetch failed:', profileError)
             // Continue without profile - don't block the entire auth
             setProfile(null)
+            
+            // Retry profile fetch after a delay
+            setTimeout(async () => {
+              console.log('Retrying profile fetch...')
+              try {
+                const retryProfileData = await fetchProfile(session.user.id)
+                console.log('Retry profile data received:', retryProfileData)
+                setProfile(retryProfileData)
+              } catch (retryError) {
+                console.error('Profile retry failed:', retryError)
+              }
+            }, 3000)
           }
         } else {
           console.log('No session found')

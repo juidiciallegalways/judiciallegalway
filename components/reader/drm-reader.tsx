@@ -529,41 +529,41 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
         </div>
       )}
 
-      {/* 📖 Header Bar - Blue Theme for Dark Mode */}
-      <div className="bg-slate-800 text-white px-6 py-4 flex items-center justify-between border-b border-slate-700">
+      {/* 📖 Sticky Header Bar - Website Colors (Navy Blue & Gold) */}
+      <div className="sticky top-0 z-50 bg-[#22334A] dark:bg-card text-primary-foreground dark:text-foreground px-6 py-4 flex items-center justify-between border-b border-primary/20 dark:border-border shadow-md">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600/20 rounded flex items-center justify-center">
-            <FileText className="w-4 h-4 text-blue-400" />
+          <div className="w-8 h-8 bg-accent/20 dark:bg-accent/30 rounded flex items-center justify-center">
+            <FileText className="w-4 h-4 text-accent" />
           </div>
           <div>
-            <h1 className="font-semibold text-lg text-white">
+            <h1 className="font-semibold text-lg">
               {itemTitle || (itemType === 'book' ? 'Legal Book' : 'Case File')}
             </h1>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {/* Zoom Controls */}
-          <div className="flex items-center gap-1 bg-slate-700/50 rounded-lg p-1 border border-slate-600/30">
+          <div className="flex items-center gap-1 bg-primary/10 dark:bg-muted/50 rounded-lg p-1 border border-accent/20 dark:border-border">
             <button 
               onClick={() => setScale(Math.max(0.5, scale - 0.25))}
-              className="p-2 hover:bg-slate-600/50 rounded transition-colors text-white" 
+              className="p-2 hover:bg-accent/20 dark:hover:bg-muted rounded transition-colors" 
               title="Zoom Out"
             >
               <ZoomOut className="w-4 h-4" />
             </button>
-            <span className="px-2 text-sm font-medium min-w-[60px] text-center text-white">
+            <span className="px-2 text-sm font-medium min-w-[60px] text-center">
               {Math.round(scale * 100)}%
             </span>
             <button 
               onClick={() => setScale(Math.min(3.0, scale + 0.25))}
-              className="p-2 hover:bg-slate-600/50 rounded transition-colors text-white" 
+              className="p-2 hover:bg-accent/20 dark:hover:bg-muted rounded transition-colors" 
               title="Zoom In"
             >
               <ZoomIn className="w-4 h-4" />
             </button>
             <button 
               onClick={() => setScale(1.0)}
-              className="p-2 hover:bg-slate-600/50 rounded transition-colors text-white" 
+              className="p-2 hover:bg-accent/20 dark:hover:bg-muted rounded transition-colors" 
               title="Reset Zoom"
             >
               <RotateCcw className="w-4 h-4" />
@@ -572,12 +572,12 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
         </div>
       </div>
 
-      {/* 🔒 Content Protection Warning Bar - Prominent Orange Theme */}
-      <div className="bg-orange-600/20 border-l-4 border-orange-500 px-6 py-3 border-b border-slate-700">
+      {/* 🔒 Content Protection Warning Bar - Website Colors (Gold Accent) */}
+      <div className="sticky top-[73px] z-40 bg-accent/10 dark:bg-accent/5 border-l-4 border-accent px-6 py-3 border-b border-accent/30 dark:border-accent/20">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-orange-200">Content Protected</span>
+          <span className="text-sm font-medium text-foreground">Content Protected</span>
         </div>
-        <p className="text-xs text-orange-300/90 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           This document is protected and monitored. Screenshots are prohibited.
         </p>
       </div>

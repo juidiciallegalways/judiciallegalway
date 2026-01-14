@@ -120,12 +120,24 @@ export function Header() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="gap-2 rounded-full pl-1 pr-3 border-muted-foreground/20">
                   <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center text-xs text-primary-foreground font-bold">
-                    {user.email?.[0].toUpperCase()}
+                    {profile?.full_name ? profile.full_name[0].toUpperCase() : user.email?.[0].toUpperCase() || 'U'}
                   </div>
+                  <span className="hidden sm:inline-block text-sm font-medium max-w-24 truncate">
+                    {profile?.full_name || user.email?.split('@')[0] || 'User'}
+                  </span>
                   <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                  <div className="font-medium text-foreground">
+                    {profile?.full_name || 'User'}
+                  </div>
+                  <div className="text-xs truncate">
+                    {user.email}
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild><Link href="/profile"><User className="mr-2 h-4 w-4"/> Profile</Link></DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild><Link href="/admin"><Settings className="mr-2 h-4 w-4"/> Admin Panel</Link></DropdownMenuItem>
@@ -192,11 +204,15 @@ export function Header() {
                       <div className="space-y-2">
                         <div className="flex items-center gap-3 px-4 py-3 bg-muted/50 rounded-lg">
                           <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-xs text-primary-foreground font-bold">
-                            {user.email?.[0].toUpperCase()}
+                            {profile?.full_name ? profile.full_name[0].toUpperCase() : user.email?.[0].toUpperCase() || 'U'}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{user.email}</p>
-                            <p className="text-xs text-muted-foreground">Signed in</p>
+                            <p className="text-sm font-medium truncate">
+                              {profile?.full_name || user.email?.split('@')[0] || 'User'}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {user.email}
+                            </p>
                           </div>
                         </div>
                         

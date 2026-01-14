@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Document, Page, pdfjs } from "react-pdf"
 import { Loader2, AlertTriangle, FileText, ZoomIn, ZoomOut, RotateCcw } from "lucide-react"
@@ -46,8 +46,10 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
   const [currentPage, setCurrentPage] = useState(1)
   const [scale, setScale] = useState(1.0)
   const [showPageCounter, setShowPageCounter] = useState(false)
-  const [pageCounterTimeout, setPageCounterTimeout] = useState<NodeJS.Timeout | null>(null)
   const supabase = createClient()
+  
+  // Use ref for timeout to avoid dependency issues
+  const pageCounterTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Generate session-specific randomization
   const [sessionRandoms] = useState(() => ({
@@ -286,9 +288,12 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
   // Show page counter when zoom changes
   useEffect(() => {
     setShowPageCounter(true)
-    if (pageCounterTimeout) clearTimeout(pageCounterTimeout)
-    const timeout = setTimeout(() => setShowPageCounter(false), 2000)
-    setPageCounterTimeout(timeout)
+    if (pageCounterTimeoutRef.current) clearTimeout(pageCounterTimeoutRef.current)
+    pageCounterTimeoutRef.current = setTimeout(() => setShowPageCounter(false), 2000)
+    
+    return () => {
+      if (pageCounterTimeoutRef.current) clearTimeout(pageCounterTimeoutRef.current)
+    }
   }, [scale])
 
   // Enhanced Security Measures with Better UX
@@ -380,7 +385,6 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
     const updateCurrentPage = () => {
       const pages = document.querySelectorAll('[id^="page-"]')
       const viewportHeight = window.innerHeight
-      const scrollTop = window.scrollY
       
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i] as HTMLElement
@@ -395,9 +399,8 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
       
       // Show page counter on scroll
       setShowPageCounter(true)
-      if (pageCounterTimeout) clearTimeout(pageCounterTimeout)
-      const timeout = setTimeout(() => setShowPageCounter(false), 2000)
-      setPageCounterTimeout(timeout)
+      if (pageCounterTimeoutRef.current) clearTimeout(pageCounterTimeoutRef.current)
+      pageCounterTimeoutRef.current = setTimeout(() => setShowPageCounter(false), 2000)
     }
 
     const scrollResetInterval = setInterval(() => { scrollCount = 0 }, 10000)

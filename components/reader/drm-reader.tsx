@@ -6,8 +6,8 @@ import { Document, Page, pdfjs } from "react-pdf"
 import { Loader2, AlertTriangle, FileText, ZoomIn, ZoomOut, RotateCcw } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
-// Worker for PDF.js (Essential for Next.js)
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
+// Configure PDF.js worker - use jsdelivr CDN which is more reliable
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 interface DRMReaderProps {
   filePath: string
@@ -46,10 +46,21 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
   const [currentPage, setCurrentPage] = useState(1)
   const [scale, setScale] = useState(1.0)
   const [showPageCounter, setShowPageCounter] = useState(false)
+  const [renderScale] = useState(1.5) // Fixed render scale for quality
   const supabase = createClient()
   
   // Use ref for timeout to avoid dependency issues
   const pageCounterTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Smooth zoom handler - uses CSS transform instead of re-rendering
+  const handleZoom = (newScale: number) => {
+    setScale(newScale)
+  }
+  
+  // Calculate CSS transform scale based on user zoom
+  const getTransformScale = () => {
+    return scale / renderScale
+  }
 
   // Generate session-specific randomization
   const [sessionRandoms] = useState(() => ({
@@ -346,15 +357,15 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
       // Zoom shortcuts
       if (e.ctrlKey && e.key === '=') {
         e.preventDefault()
-        setScale(Math.min(3.0, scale + 0.25))
+        handleZoom(Math.min(3.0, scale + 0.25))
       }
       if (e.ctrlKey && e.key === '-') {
         e.preventDefault()
-        setScale(Math.max(0.5, scale - 0.25))
+        handleZoom(Math.max(0.5, scale - 0.25))
       }
       if (e.ctrlKey && e.key === '0') {
         e.preventDefault()
-        setScale(1.0)
+        handleZoom(1.0)
       }
     }
 
@@ -571,7 +582,7 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
           {/* Zoom Controls */}
           <div className="flex items-center gap-1 bg-primary/10 dark:bg-muted/50 rounded-lg p-1 border border-accent/20 dark:border-border">
             <button 
-              onClick={() => setScale(Math.max(0.5, scale - 0.25))}
+              onClick={() => handleZoom(Math.max(0.5, scale - 0.25))}
               className="p-2 hover:bg-accent/20 dark:hover:bg-muted rounded transition-colors" 
               title="Zoom Out"
             >
@@ -581,14 +592,14 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
               {Math.round(scale * 100)}%
             </span>
             <button 
-              onClick={() => setScale(Math.min(3.0, scale + 0.25))}
+              onClick={() => handleZoom(Math.min(3.0, scale + 0.25))}
               className="p-2 hover:bg-accent/20 dark:hover:bg-muted rounded transition-colors" 
               title="Zoom In"
             >
               <ZoomIn className="w-4 h-4" />
             </button>
             <button 
-              onClick={() => setScale(1.0)}
+              onClick={() => handleZoom(1.0)}
               className="p-2 hover:bg-accent/20 dark:hover:bg-muted rounded transition-colors" 
               title="Reset Zoom"
             >
@@ -621,7 +632,14 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
 
       {/* 📄 Main Content Area - Centered */}
       <div className="relative z-20 w-full px-4 py-8 flex justify-center">
-        <Document
+        <div 
+          style={{ 
+            transform: `scale(${getTransformScale()})`,
+            transformOrigin: 'top center',
+            transition: 'transform 0.2s ease-out'
+          }}
+        >
+          <Document
           file={url}
           onLoadSuccess={({ numPages }) => setNumPages(numPages)}
           loading={
@@ -646,8 +664,13 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
                   pageNumber={index + 1} 
                   renderTextLayer={false}
                   renderAnnotationLayer={false} 
-                  scale={scale}
+                  scale={renderScale}
                   className="block mx-auto"
+                  loading={
+                    <div className="flex items-center justify-center min-h-[600px] bg-muted/20">
+                      <Loader2 className="animate-spin w-6 h-6 text-muted-foreground" />
+                    </div>
+                  }
                 />
                 
                 {/* 🔒 Clean Diagonal Watermarks Pattern - Better Spacing */}
@@ -761,6 +784,7 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
             ))}
           </div>
         </Document>
+        </div>
       </div>
 
       {/* 📊 Page Counter (Bottom Center) - Auto-hide, No User Name */}

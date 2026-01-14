@@ -610,11 +610,11 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
       </div>
 
       {/* 🔒 Content Protection Warning Bar - NOT Sticky */}
-      <div className="bg-accent/10 dark:bg-accent/20 border-l-4 border-accent px-4 sm:px-6 py-3 border-b border-accent/30 dark:border-accent/40">
+      <div className="bg-accent/10 dark:bg-accent/30 border-l-4 border-accent px-4 sm:px-6 py-3 border-b border-accent/30 dark:border-accent/50">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-foreground dark:text-accent-foreground">Content Protected</span>
+          <span className="text-sm font-medium text-foreground dark:text-foreground">Content Protected</span>
         </div>
-        <p className="text-xs text-muted-foreground dark:text-accent-foreground/80 mt-1">
+        <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
           This document is protected and monitored. Screenshots are prohibited.
         </p>
       </div>

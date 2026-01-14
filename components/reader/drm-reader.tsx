@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Document, Page, pdfjs } from "react-pdf"
 import { Loader2, AlertTriangle, FileText, ZoomIn, ZoomOut, RotateCcw } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
@@ -30,6 +31,7 @@ interface UserInfo {
 }
 
 export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, itemData }: DRMReaderProps) {
+  const router = useRouter()
   const [url, setUrl] = useState<string | null>(null)
   const [numPages, setNumPages] = useState<number>(0)
   const [loading, setLoading] = useState(true)
@@ -450,7 +452,7 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
             Refresh Page
           </button>
           <button 
-            onClick={() => window.history.back()} 
+            onClick={() => router.push('/profile?tab=purchases')} 
             className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
           >
             Go Back
@@ -475,7 +477,7 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
           Item Type: {itemType} | Item ID: {itemId}
         </p>
         <button 
-          onClick={() => window.history.back()} 
+          onClick={() => router.push('/profile?tab=purchases')} 
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
         >
           Go Back
@@ -498,7 +500,7 @@ export function DRMReader({ filePath, userEmail, itemId, itemType, itemTitle, it
           File Path: {filePath} | Item Type: {itemType}
         </p>
         <button 
-          onClick={() => window.history.back()} 
+          onClick={() => router.push('/profile?tab=purchases')} 
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
         >
           Go Back
